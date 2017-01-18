@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{51E12926-1D82-444F-B983-409CF79900EC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2A431BDD-2FC9-46BC-AAB1-F214651C4329}"
+	ProjectSection(SolutionItems) = preProject
+		global.json = global.json
+	EndProjectSection
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Extrasolar", "src\Extrasolar\Extrasolar.xproj", "{2CDEF67F-616D-46AE-9D0D-76A4BEC54CA5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "demo", "demo", "{890197A6-013D-432D-B7D2-07F65EE8866C}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Extrasolar.Demo.Server", "demo\Extrasolar.Demo.Server\Extrasolar.Demo.Server.xproj", "{013489F5-F309-40B6-828C-0BFA87415EC3}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Extrasolar.Demo.Client", "demo\Extrasolar.Demo.Client\Extrasolar.Demo.Client.xproj", "{1EEFC2E0-47A1-402A-8D43-72B5B83214EF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2CDEF67F-616D-46AE-9D0D-76A4BEC54CA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CDEF67F-616D-46AE-9D0D-76A4BEC54CA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CDEF67F-616D-46AE-9D0D-76A4BEC54CA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CDEF67F-616D-46AE-9D0D-76A4BEC54CA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{013489F5-F309-40B6-828C-0BFA87415EC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{013489F5-F309-40B6-828C-0BFA87415EC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{013489F5-F309-40B6-828C-0BFA87415EC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{013489F5-F309-40B6-828C-0BFA87415EC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1EEFC2E0-47A1-402A-8D43-72B5B83214EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EEFC2E0-47A1-402A-8D43-72B5B83214EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EEFC2E0-47A1-402A-8D43-72B5B83214EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EEFC2E0-47A1-402A-8D43-72B5B83214EF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2CDEF67F-616D-46AE-9D0D-76A4BEC54CA5} = {51E12926-1D82-444F-B983-409CF79900EC}
+		{013489F5-F309-40B6-828C-0BFA87415EC3} = {890197A6-013D-432D-B7D2-07F65EE8866C}
+		{1EEFC2E0-47A1-402A-8D43-72B5B83214EF} = {890197A6-013D-432D-B7D2-07F65EE8866C}
+	EndGlobalSection
+EndGlobal
