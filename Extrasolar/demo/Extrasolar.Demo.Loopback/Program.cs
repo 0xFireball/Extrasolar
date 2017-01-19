@@ -26,7 +26,7 @@ namespace Extrasolar.Demo.Loopback
             Task.WaitAll(server, client);
             // Test RPCCaller
             var rpcCallerDemo = new RpcCallerDemo();
-            rpcCallerDemo.Run();
+            rpcCallerDemo.Run(_clientSock);
             Task.Delay(-1).GetAwaiter().GetResult();
         }
 
