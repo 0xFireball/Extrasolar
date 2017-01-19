@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Extrasolar.Demo.Client
 {
@@ -9,6 +6,7 @@ namespace Extrasolar.Demo.Client
     {
         public static void Main(string[] args)
         {
+            Task.Delay(-1).GetAwaiter().GetResult();
         }
     }
 }
