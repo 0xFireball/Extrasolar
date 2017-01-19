@@ -1,4 +1,6 @@
 {
+  "title": "Extrasolar",
+  "copyright": "Copyright (c) 2017 0xFireball (Nihal Talur), IridiumIon Software",
   "version": "1.0.0-*",
 
   "dependencies": {
