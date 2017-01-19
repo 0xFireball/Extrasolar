@@ -29,14 +29,8 @@ namespace Extrasolar.JsonRpc
         {
             TransportStream = transportStream;
             Mode = clientMode;
-            if (Mode.HasFlag(ClientMode.Request))
-            {
-                DataWriter = new StreamWriter(TransportStream);
-            }
-            if (Mode.HasFlag(ClientMode.Response))
-            {
-                DataReader = new StreamReader(TransportStream);
-            }
+            DataWriter = new StreamWriter(TransportStream);
+            DataReader = new StreamReader(TransportStream);
 
             if (Mode.HasFlag(ClientMode.Response))
             {
