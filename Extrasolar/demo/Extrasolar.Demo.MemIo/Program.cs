@@ -34,7 +34,7 @@ namespace Extrasolar.Demo.MemIo
             {
                 if (!req.IsNotification)
                 {
-                    Console.WriteLine($"Client called method ${req.Method}.");
+                    Console.WriteLine($"Client called method {req.Method}.");
                     return new ResultResponse(req, null);
                 }
                 return null;
