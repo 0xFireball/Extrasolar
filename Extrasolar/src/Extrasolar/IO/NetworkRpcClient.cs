@@ -1,6 +1,5 @@
 ﻿using Extrasolar.JsonRpc;
 using Extrasolar.JsonRpc.Types;
-using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading;
@@ -39,7 +38,8 @@ namespace Extrasolar.IO
 
         private Response HandleRpcRequest(Request request)
         {
-            throw new NotImplementedException();
+            // Empty handler
+            return null;
         }
 
         private async Task<Response> Request(Request request)
