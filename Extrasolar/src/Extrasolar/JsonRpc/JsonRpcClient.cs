@@ -49,9 +49,12 @@ namespace Extrasolar.JsonRpc
             while (Listening)
             {
                 var requestJson = await DataReader.ReadLineAsync();
-                var request = JsonConvert.DeserializeObject<Request>(requestJson);
-                // Spawn new handler
-                var handlerTask = Task.Factory.StartNew(async () => await HandleRequest(request));
+                if (requestJson != null)
+                {
+                    var request = JsonConvert.DeserializeObject<Request>(requestJson);
+                    // Spawn new handler
+                    var handlerTask = Task.Factory.StartNew(async () => await HandleRequest(request));
+                }
             }
         }
 

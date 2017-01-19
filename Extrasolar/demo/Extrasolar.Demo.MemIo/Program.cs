@@ -22,14 +22,14 @@ namespace Extrasolar.Demo.MemIo
 
         private static async Task BasicMemIoClient2()
         {
-            var rpcClient = new JsonRpcClient(_basicIoStream, JsonRpcClient.ClientMode.TwoWay);
+            var rpcClient = new JsonRpcClient(_basicIoStream, JsonRpcClient.ClientMode.Request);
             _ioClientsReady.SignalAndWait();
             await rpcClient.SendRequest(new Request("ping", null, "0"));
         }
 
         private static async Task BasicMemIoClient1()
         {
-            var rpcClient = new JsonRpcClient(_basicIoStream, JsonRpcClient.ClientMode.TwoWay);
+            var rpcClient = new JsonRpcClient(_basicIoStream, JsonRpcClient.ClientMode.Response);
             rpcClient.AddRequestHandler((req) =>
             {
                 if (!req.IsNotification)
