@@ -37,8 +37,10 @@ namespace Extrasolar.JsonRpc
 
         public async Task SendRequest(Request request)
         {
+            await _transportLock.WaitAsync();
             await DataWriter.WriteLineAsync(request.ToString());
             await DataWriter.FlushAsync();
+            _transportLock.Release();
         }
 
         public async Task ReceiveDataEventLoop()
@@ -108,7 +110,7 @@ namespace Extrasolar.JsonRpc
                 // Only if response was handled
                 // Remember, notifications do not get a reply
                 await _transportLock.WaitAsync();
-                await DataWriter.WriteAsync(response.ToString());
+                await DataWriter.WriteLineAsync(response.ToString());
                 await DataWriter.FlushAsync();
                 _transportLock.Release();
             }
