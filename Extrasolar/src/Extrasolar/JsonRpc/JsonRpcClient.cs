@@ -32,10 +32,7 @@ namespace Extrasolar.JsonRpc
             DataWriter = new StreamWriter(TransportStream);
             DataReader = new StreamReader(TransportStream);
 
-            if (Mode.HasFlag(ClientMode.Response))
-            {
-                Task.Factory.StartNew(ReceiveDataEventLoop);
-            }
+            Task.Factory.StartNew(ReceiveDataEventLoop);
         }
 
         public async Task SendRequest(Request request)
