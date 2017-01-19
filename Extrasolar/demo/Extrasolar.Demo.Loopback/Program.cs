@@ -1,6 +1,7 @@
 ﻿using Extrasolar.IO;
 using Extrasolar.JsonRpc;
 using Extrasolar.JsonRpc.Types;
+using Extrasolar.Rpc;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -17,8 +18,12 @@ namespace Extrasolar.Demo.Loopback
         public static void Main()
         {
             // Test basic MemIO JSON RPC
-            Task.Factory.StartNew(NetServerThread);
-            Task.Factory.StartNew(NetClientThread);
+            var server = Task.Factory.StartNew(NetServerThread);
+            var client = Task.Factory.StartNew(NetClientThread);
+            Task.WaitAll(server, client);
+            // Test RPCCaller
+            var rpcCallerDemo = new RpcCallerDemo();
+            rpcCallerDemo.Run();
             Task.Delay(-1).GetAwaiter().GetResult();
         }
 
