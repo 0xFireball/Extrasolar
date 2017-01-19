@@ -2,7 +2,7 @@
 {
     public class ProxyGenerator
     {
-        internal static TInterface BuildInstance<TInterface>() where TInterface : class
+        internal static TInterface BuildEmpty<TInterface>() where TInterface : class
         {
             return ProxyFactory.CreateEmptyProxy<TInterface>(typeof(TInterface));
         }

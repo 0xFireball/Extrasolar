@@ -1,4 +1,5 @@
-﻿using System.Dynamic;
+﻿using Extrasolar.Rpc;
+using System.Dynamic;
 using System.Reflection;
 
 namespace Extrasolar.Rpc.Proxying
@@ -6,9 +7,11 @@ namespace Extrasolar.Rpc.Proxying
     internal class CallProxy<TInterface> : DynamicObject where TInterface : class
     {
         private TInterface _proxiedObject;
+        private readonly RpcCaller<TInterface> _remoteCaller;
 
-        public CallProxy(TInterface target)
+        public CallProxy(TInterface target, RpcCaller<TInterface> caller)
         {
+            this._remoteCaller = caller;
             _proxiedObject = target;
         }
 
@@ -17,6 +20,9 @@ namespace Extrasolar.Rpc.Proxying
             try
             {
                 // TODO: Processing
+
+                result = _remoteCaller.CallByNameAsync(binder.Name, args).GetAwaiter().GetResult();
+                return true;
 
                 // Forward call to proxied object
                 result = _proxiedObject.GetType().GetTypeInfo().GetMethod(binder.Name).Invoke(_proxiedObject, args);
@@ -29,10 +35,10 @@ namespace Extrasolar.Rpc.Proxying
             }
         }
 
-        public static CallProxy<TInterface> CreateEmpty()
+        public static CallProxy<TInterface> CreateEmpty(RpcCaller<TInterface> caller)
         {
-            var emptyTarget = ProxyGenerator.BuildInstance<TInterface>();
-            return new CallProxy<TInterface>(emptyTarget);
+            var emptyTarget = ProxyGenerator.BuildEmpty<TInterface>();
+            return new CallProxy<TInterface>(emptyTarget, caller);
         }
     }
 }

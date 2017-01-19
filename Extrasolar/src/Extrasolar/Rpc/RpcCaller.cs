@@ -19,10 +19,16 @@ namespace Extrasolar.Rpc
             var methods = typeof(TInterface).GetTypeInfo().GetMethods();
         }
 
-        public TInterface CreateClient()
+        //public TInterface CreateClient()
+        //{
+        //    var client = CallProxy<TInterface>.CreateEmpty();
+        //    return client;
+        //}
+
+        public dynamic CreateClient()
         {
-            var client = CallProxy<TInterface>.CreateEmpty();
-            return default(TInterface);
+            var client = CallProxy<TInterface>.CreateEmpty(this);
+            return client;
         }
 
         public async Task<Response> CallByNameAsync(string methodName, params object[] args)

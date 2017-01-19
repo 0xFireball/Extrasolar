@@ -1,6 +1,7 @@
 ﻿using Extrasolar.IO;
 using Extrasolar.IO.Transport;
 using Extrasolar.Rpc;
+using System;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
@@ -22,7 +23,10 @@ namespace Extrasolar.Demo.Loopback
                 new NetworkRpcClient(new TcpTransportLayer(_clientSock),
                 JsonRpc.JsonRpcClient.ClientMode.Request
             ));
-            var result = await caller.CallByNameAsync<string>(nameof(IHelloServer.SayHello));
+            //var result = await caller.CallByNameAsync<string>(nameof(IHelloServer.SayHello));
+            var client = caller.CreateClient();
+            var result = (string)client.SayHello();
+            Console.WriteLine("Sent command from client.");
         }
     }
 }
