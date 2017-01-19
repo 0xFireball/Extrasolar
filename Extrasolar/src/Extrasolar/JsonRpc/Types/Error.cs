@@ -16,7 +16,7 @@ namespace Extrasolar.JsonRpc.Types
 
         public bool ShouldSerializeData()
         {
-            return this.Data != null;
+            return Data != null;
         }
 
         public override string ToString()
