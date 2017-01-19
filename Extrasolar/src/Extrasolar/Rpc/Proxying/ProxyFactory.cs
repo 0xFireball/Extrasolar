@@ -45,11 +45,12 @@ namespace Extrasolar.Rpc.Proxying
         {
             //create the type and construct an instance
             Type[] ctorArgTypes = { typeof(Type), proxyBuilder.CtorType };
-            Type t = proxyBuilder.TypeBuilder.CreateType();
+            var tInfo = proxyBuilder.TypeBuilder.CreateTypeInfo();
+            var t = tInfo.AsType();
             var constructorInfo = t.GetConstructor(ctorArgTypes);
             if (constructorInfo != null)
             {
-                TInterface instance = (TInterface)constructorInfo.Invoke(new object[] { typeof(TInterface), channelCtorValue });
+                var instance = (TInterface)constructorInfo.Invoke(new object[] { typeof(TInterface), channelCtorValue });
                 return instance;
             }
             return null;
@@ -59,10 +60,10 @@ namespace Extrasolar.Rpc.Proxying
         {
 #if NETSTANDARD1_6
             // create a new assembly for the proxy
-            AssemblyBuilder assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(PROXY_ASSEMBLY), AssemblyBuilderAccess.Run);
+            var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(PROXY_ASSEMBLY), AssemblyBuilderAccess.Run);
 
             // create a new module for the proxy
-            ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule(PROXY_MODULE);
+            var moduleBuilder = assemblyBuilder.DefineDynamicModule(PROXY_MODULE);
 #else
             AppDomain domain = Thread.GetDomain();
             // create a new assembly for the proxy
@@ -76,8 +77,8 @@ namespace Extrasolar.Rpc.Proxying
             TypeAttributes typeAttributes = TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed;
 
             // Construct the type builder
-            TypeBuilder typeBuilder = moduleBuilder.DefineType(interfaceType.Name + PROXY, typeAttributes, channelType);
-            List<Type> allInterfaces = new List<Type>(interfaceType.GetInterfaces());
+            var typeBuilder = moduleBuilder.DefineType(interfaceType.Name + PROXY, typeAttributes, channelType);
+            var allInterfaces = new List<Type>(interfaceType.GetInterfaces());
             allInterfaces.Add(interfaceType);
 
             //add the interface
@@ -88,7 +89,7 @@ namespace Extrasolar.Rpc.Proxying
             CreateConstructor(channelType, typeBuilder, ctorArgTypes);
 
             //construct the type maps
-            Dictionary<Type, OpCode> ldindOpCodeTypeMap = new Dictionary<Type, OpCode>();
+            var ldindOpCodeTypeMap = new Dictionary<Type, OpCode>();
             ldindOpCodeTypeMap.Add(typeof(Boolean), OpCodes.Ldind_I1);
             ldindOpCodeTypeMap.Add(typeof(Byte), OpCodes.Ldind_U1);
             ldindOpCodeTypeMap.Add(typeof(SByte), OpCodes.Ldind_I1);
@@ -101,7 +102,7 @@ namespace Extrasolar.Rpc.Proxying
             ldindOpCodeTypeMap.Add(typeof(Char), OpCodes.Ldind_U2);
             ldindOpCodeTypeMap.Add(typeof(Double), OpCodes.Ldind_R8);
             ldindOpCodeTypeMap.Add(typeof(Single), OpCodes.Ldind_R4);
-            Dictionary<Type, OpCode> stindOpCodeTypeMap = new Dictionary<Type, OpCode>();
+            var stindOpCodeTypeMap = new Dictionary<Type, OpCode>();
             stindOpCodeTypeMap.Add(typeof(Boolean), OpCodes.Stind_I1);
             stindOpCodeTypeMap.Add(typeof(Byte), OpCodes.Stind_I1);
             stindOpCodeTypeMap.Add(typeof(SByte), OpCodes.Stind_I1);
@@ -116,10 +117,10 @@ namespace Extrasolar.Rpc.Proxying
             stindOpCodeTypeMap.Add(typeof(Single), OpCodes.Stind_R4);
 
             //construct the method builders from the method infos defined in the interface
-            List<MethodInfo> methods = GetAllMethods(allInterfaces);
+            var methods = GetAllMethods(allInterfaces);
             foreach (MethodInfo methodInfo in methods)
             {
-                MethodBuilder methodBuilder = ConstructMethod(channelType, methodInfo, typeBuilder, ldindOpCodeTypeMap, stindOpCodeTypeMap);
+                var methodBuilder = ConstructMethod(channelType, methodInfo, typeBuilder, ldindOpCodeTypeMap, stindOpCodeTypeMap);
                 typeBuilder.DefineMethodOverride(methodBuilder, methodInfo);
             }
 
@@ -138,7 +139,7 @@ namespace Extrasolar.Rpc.Proxying
 
         private static List<MethodInfo> GetAllMethods(List<Type> allInterfaces)
         {
-            List<MethodInfo> methods = new List<MethodInfo>();
+            var methods = new List<MethodInfo>();
             foreach (Type interfaceType in allInterfaces)
                 methods.AddRange(interfaceType.GetMethods());
             return methods;
@@ -146,10 +147,10 @@ namespace Extrasolar.Rpc.Proxying
 
         private static void CreateConstructor(Type channelType, TypeBuilder typeBuilder, Type[] ctorArgTypes)
         {
-            ConstructorBuilder ctor = typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.HasThis, ctorArgTypes);
-            ConstructorInfo baseCtor = channelType.GetConstructor(ctorArgTypes);
+            var ctor = typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.HasThis, ctorArgTypes);
+            var baseCtor = channelType.GetConstructor(ctorArgTypes);
 
-            ILGenerator ctorIL = ctor.GetILGenerator();
+            var ctorIL = ctor.GetILGenerator();
             ctorIL.Emit(OpCodes.Ldarg_0); //load "this"
             ctorIL.Emit(OpCodes.Ldarg_1); //load serviceType
             ctorIL.Emit(OpCodes.Ldarg_2); //load "endpoint"
@@ -159,14 +160,14 @@ namespace Extrasolar.Rpc.Proxying
 
         private static MethodBuilder ConstructMethod(Type channelType, MethodInfo methodInfo, TypeBuilder typeBuilder, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
         {
-            ParameterInfo[] paramInfos = methodInfo.GetParameters();
+            var paramInfos = methodInfo.GetParameters();
             int nofParams = paramInfos.Length;
             Type[] parameterTypes = new Type[nofParams];
             for (int i = 0; i < nofParams; i++) parameterTypes[i] = paramInfos[i].ParameterType;
             Type returnType = methodInfo.ReturnType;
-            MethodBuilder methodBuilder = typeBuilder.DefineMethod(methodInfo.Name, MethodAttributes.Public | MethodAttributes.Virtual, returnType, parameterTypes);
+            var methodBuilder = typeBuilder.DefineMethod(methodInfo.Name, MethodAttributes.Public | MethodAttributes.Virtual, returnType, parameterTypes);
 
-            ILGenerator mIL = methodBuilder.GetILGenerator();
+            var mIL = methodBuilder.GetILGenerator();
             GenerateILCodeForMethod(channelType, methodInfo, mIL, parameterTypes, methodBuilder.ReturnType, ldindOpCodeTypeMap, stindOpCodeTypeMap);
             return methodBuilder;
         }
@@ -177,10 +178,10 @@ namespace Extrasolar.Rpc.Proxying
 
             int nofArgs = inputArgTypes.Length;
             //get the MethodInfo for InvokeMethod
-            MethodInfo invokeMethodMI = channelType.GetMethod(INVOKE_METHOD, BindingFlags.Instance | BindingFlags.NonPublic);
+            var invokeMethodMI = channelType.GetMethod(INVOKE_METHOD, BindingFlags.Instance | BindingFlags.NonPublic);
 
             //declare local variables
-            LocalBuilder resultLB = mIL.DeclareLocal(typeof(object[])); // object[] result
+            var resultLB = mIL.DeclareLocal(typeof(object[])); // object[] result
 
             //set local value with method name and arg types to improve perfmance
             //metadata: methodInfo.Name | inputTypes[x].FullName .. |
@@ -192,7 +193,7 @@ namespace Extrasolar.Rpc.Proxying
                 metadata += "|" + string.Join("|", args);
             }
             //declare and assign string literal
-            LocalBuilder metaLB = mIL.DeclareLocal(typeof(string));
+            var metaLB = mIL.DeclareLocal(typeof(string));
 
 #if !NETSTANDARD1_6
             metaLB.SetLocalSymInfo("metaData", 1, 2);
@@ -246,7 +247,7 @@ namespace Extrasolar.Rpc.Proxying
             {
                 if (inputArgTypes[i].IsByRef)
                 {
-                    Type inputType = inputArgTypes[i].GetElementType();
+                    var inputType = inputArgTypes[i].GetElementType();
                     mIL.Emit(OpCodes.Ldarg, i + 1); //load the address of the argument
                     mIL.Emit(OpCodes.Ldloc, resultLB.LocalIndex); //load the result array
                     mIL.Emit(OpCodes.Ldc_I4, i + 1); //load the index into the result array

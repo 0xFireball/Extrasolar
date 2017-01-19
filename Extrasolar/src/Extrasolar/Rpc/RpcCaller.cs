@@ -1,6 +1,5 @@
 ﻿using Extrasolar.IO;
 using Extrasolar.JsonRpc.Types;
-using Extrasolar.Rpc;
 using Extrasolar.Rpc.Proxying;
 using Newtonsoft.Json;
 using System.Reflection;
