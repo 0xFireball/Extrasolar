@@ -186,6 +186,7 @@ namespace Extrasolar.Rpc.Proxying
 
             var mIL = methodBuilder.GetILGenerator();
             // TODO: Inject call to binder
+            GenerateILCodeForMethod()
 
             return methodBuilder;
         }
@@ -306,20 +307,25 @@ namespace Extrasolar.Rpc.Proxying
             return methodBuilder;
         }
 
-        private static void GenerateILCodeForMethod(Type channelType, MethodInfo methodInfo, ILGenerator mIL, Type[] inputArgTypes, Type returnType, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
+        private static void GenerateILCodeForMethod(Type channelType, MethodInfo proxyMethodInfo, ILGenerator mIL, Type[] inputArgTypes, Type returnType, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
+        {
+            //get the MethodInfo for InvokeMethod
+            var invokeMethodMI = channelType.GetMethod(INVOKE_METHOD, BindingFlags.Instance | BindingFlags.NonPublic);
+            GenerateILCodeForMethod(invokeMethodMI, proxyMethodInfo, mIL, inputArgTypes, returnType, ldindOpCodeTypeMap, stindOpCodeTypeMap);
+        }
+
+        private static void GenerateILCodeForMethod(MethodInfo targetMethodInfo, MethodInfo proxyMethodInfo, ILGenerator mIL, Type[] inputArgTypes, Type returnType, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
         {
             mIL.Emit(OpCodes.Ldarg_0); //load "this"
 
             int nofArgs = inputArgTypes.Length;
-            //get the MethodInfo for InvokeMethod
-            var invokeMethodMI = channelType.GetMethod(INVOKE_METHOD, BindingFlags.Instance | BindingFlags.NonPublic);
 
             //declare local variables
             var resultLB = mIL.DeclareLocal(typeof(object[])); // object[] result
 
             //set local value with method name and arg types to improve perfmance
             //metadata: methodInfo.Name | inputTypes[x].FullName .. |
-            var metadata = methodInfo.Name;
+            var metadata = proxyMethodInfo.Name;
             if (inputArgTypes.Length > 0)
             {
                 var args = new string[inputArgTypes.Length];
@@ -374,7 +380,7 @@ namespace Extrasolar.Rpc.Proxying
                 }
                 mIL.Emit(OpCodes.Stelem_Ref); //store the reference in the args array
             }
-            mIL.Emit(OpCodes.Call, invokeMethodMI);
+            mIL.Emit(OpCodes.Call, targetMethodInfo);
             mIL.Emit(OpCodes.Stloc, resultLB.LocalIndex); //store the result
             //store the results in the arguments
             for (int i = 0; i < nofArgs; i++)

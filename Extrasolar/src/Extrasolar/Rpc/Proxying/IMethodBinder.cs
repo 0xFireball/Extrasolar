@@ -1,9 +1,7 @@
-﻿using System.Reflection;
-
-namespace Extrasolar.Rpc.Proxying
+﻿namespace Extrasolar.Rpc.Proxying
 {
     public interface IMethodBinder
     {
-        bool InvokeMethod(MethodInfo methodInfo, out object result, params object[] args);
+        bool InvokeMethod(string metadata, out object result, params object[] args);
     }
 }
