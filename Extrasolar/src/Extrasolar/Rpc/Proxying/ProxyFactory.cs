@@ -219,9 +219,9 @@ namespace Extrasolar.Rpc.Proxying
                 mIL.Emit(OpCodes.Ldarg, i + 1); //load the i'th argument. This might be an address
                 if (inputArgTypes[i].IsByRef)
                 {
-                    if (inputType.IsValueType())
+                    if (inputType.GetTypeInfo().IsValueType)
                     {
-                        if (inputType.IsPrimitive())
+                        if (inputType.GetTypeInfo().IsPrimitive)
                         {
                             mIL.Emit(ldindOpCodeTypeMap[inputType]);
                             mIL.Emit(OpCodes.Box, inputType);
@@ -234,7 +234,7 @@ namespace Extrasolar.Rpc.Proxying
                 }
                 else
                 {
-                    if (inputArgTypes[i].IsValueType())
+                    if (inputArgTypes[i].GetTypeInfo().IsValueType)
                         mIL.Emit(OpCodes.Box, inputArgTypes[i]);
                 }
                 mIL.Emit(OpCodes.Stelem_Ref); //store the reference in the args array
@@ -251,7 +251,7 @@ namespace Extrasolar.Rpc.Proxying
                     mIL.Emit(OpCodes.Ldloc, resultLB.LocalIndex); //load the result array
                     mIL.Emit(OpCodes.Ldc_I4, i + 1); //load the index into the result array
                     mIL.Emit(OpCodes.Ldelem_Ref); //load the value in the index of the array
-                    if (inputType.IsValueType())
+                    if (inputType.GetTypeInfo().IsValueType)
                     {
                         mIL.Emit(OpCodes.Unbox, inputArgTypes[i].GetElementType());
                         mIL.Emit(ldindOpCodeTypeMap[inputArgTypes[i].GetElementType()]);
@@ -270,10 +270,10 @@ namespace Extrasolar.Rpc.Proxying
                 mIL.Emit(OpCodes.Ldc_I4, 0); //load the index of the return value. Alway 0
                 mIL.Emit(OpCodes.Ldelem_Ref); //load the value in the index of the array
 
-                if (returnType.IsValueType())
+                if (returnType.GetTypeInfo().IsValueType)
                 {
                     mIL.Emit(OpCodes.Unbox, returnType); //unbox it
-                    if (returnType.IsPrimitive())        //deal with primitive vs struct value types
+                    if (returnType.GetTypeInfo().IsPrimitive)        //deal with primitive vs struct value types
                         mIL.Emit(ldindOpCodeTypeMap[returnType]);
                     else
                         mIL.Emit(OpCodes.Ldobj, returnType);
