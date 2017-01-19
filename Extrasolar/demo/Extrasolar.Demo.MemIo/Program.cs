@@ -30,7 +30,7 @@ namespace Extrasolar.Demo.MemIo
         private static async Task BasicMemIoClient1()
         {
             var rpcClient = new JsonRpcClient(Console.OpenStandardInput(), JsonRpcClient.ClientMode.Response);
-            rpcClient.AddRequestHandler((req) =>
+            rpcClient.RequestPipeline.AddItemToEnd((req) =>
             {
                 if (!req.IsNotification)
                 {

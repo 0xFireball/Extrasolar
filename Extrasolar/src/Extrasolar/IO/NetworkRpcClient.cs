@@ -21,19 +21,20 @@ namespace Extrasolar.IO
             RpcLayer = new JsonRpcClient(tcpClient.GetStream(), Mode);
             if (Mode.HasFlag(JsonRpcClient.ClientMode.Response))
             {
-                RpcLayer.AddRequestHandler(HandleRpcRequest);
+                RpcLayer.RequestPipeline.AddItemToEnd(HandleRpcRequest);
             }
             if (Mode.HasFlag(JsonRpcClient.ClientMode.Request))
             {
-                RpcLayer.AddResponseHandler(HandleRpcResponse);
+                RpcLayer.ResponsePipeline.AddItemToEnd(HandleRpcResponse);
             }
         }
 
-        private void HandleRpcResponse(Response response)
+        private bool HandleRpcResponse(Response response)
         {
             // Store result and signal that response is ready
             ResultCache[response.Id] = response;
             RequestQueue[response.Id].Set();
+            return false;
         }
 
         private Response HandleRpcRequest(Request request)

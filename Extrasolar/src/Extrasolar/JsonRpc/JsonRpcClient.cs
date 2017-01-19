@@ -1,7 +1,7 @@
 ﻿using Extrasolar.JsonRpc.Types;
+using Extrasolar.Types;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -83,11 +83,15 @@ namespace Extrasolar.JsonRpc
         private void HandleReceivedResponse(Response response)
         {
             ResponseReceived?.Invoke(this, response);
-            lock (ResponseHandlers)
+            lock (ResponsePipeline)
             {
-                foreach (var handler in ResponseHandlers)
+                foreach (var handler in ResponsePipeline.Handlers)
                 {
-                    handler.Invoke(response);
+                    var result = handler.Invoke(response);
+                    if (result)
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -96,9 +100,9 @@ namespace Extrasolar.JsonRpc
         {
             RequestReceived?.Invoke(this, request);
             Response response = null;
-            lock (RequestHandlers)
+            lock (RequestPipeline)
             {
-                foreach (var handler in RequestHandlers)
+                foreach (var handler in RequestPipeline.Handlers)
                 {
                     var resp = handler.Invoke(request);
                     if (resp != null)
@@ -119,22 +123,6 @@ namespace Extrasolar.JsonRpc
             }
         }
 
-        public void AddRequestHandler(Func<Request, Response> handler)
-        {
-            lock (RequestHandlers)
-            {
-                RequestHandlers.Add(handler);
-            }
-        }
-
-        public void AddResponseHandler(Action<Response> handler)
-        {
-            lock (ResponseHandlers)
-            {
-                ResponseHandlers.Add(handler);
-            }
-        }
-
         public void Dispose()
         {
             DataWriter?.Dispose();
@@ -146,12 +134,14 @@ namespace Extrasolar.JsonRpc
         /// They are evaluated in order until a Response object is received. If a handler
         /// returns null, the next handler will be invoked.
         /// </summary>
-        protected List<Func<Request, Response>> RequestHandlers { get; } = new List<Func<Request, Response>>();
+        public Pipelines<Request, Response> RequestPipeline { get; } = new Pipelines<Request, Response>();
 
         /// <summary>
         /// A list of callbacks that receive responses to previous requests.
+        /// If a handler returns `true` the response will be considered handled
+        /// and the pipeline will end. Otherwise, the next handler will be called.
         /// </summary>
-        protected List<Action<Response>> ResponseHandlers { get; } = new List<Action<Response>>();
+        public Pipelines<Response, bool> ResponsePipeline { get; } = new Pipelines<Response, bool>();
 
         /// <summary>
         /// A notify-only event that fires whenever a request is received
