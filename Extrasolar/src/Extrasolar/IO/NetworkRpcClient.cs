@@ -7,18 +7,18 @@ using System.Threading.Tasks;
 
 namespace Extrasolar.IO
 {
-    public class NetworkRpcClient
+    public class NetworkRpcClient : IRemoteRpcClient
     {
         public JsonRpcClient RpcLayer { get; }
         public JsonRpcClient.ClientMode Mode { get; set; }
-        protected TcpClient TcpClient { get; set; }
+        protected ITransportLayer Transport { get; set; }
 
-        public NetworkRpcClient(TcpClient tcpClient, JsonRpcClient.ClientMode clientMode)
+        public NetworkRpcClient(ITransportLayer transport, JsonRpcClient.ClientMode clientMode)
         {
-            TcpClient = tcpClient;
+            Transport = transport;
             Mode = clientMode;
 
-            RpcLayer = new JsonRpcClient(tcpClient.GetStream(), Mode);
+            RpcLayer = new JsonRpcClient(transport.GetStream(), Mode);
             if (Mode.HasFlag(JsonRpcClient.ClientMode.Response))
             {
                 RpcLayer.RequestPipeline.AddItemToStart(HandleRpcRequest);

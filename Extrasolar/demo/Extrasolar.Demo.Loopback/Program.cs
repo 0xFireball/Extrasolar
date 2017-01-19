@@ -25,13 +25,13 @@ namespace Extrasolar.Demo.Loopback
         private static async Task NetClientThread()
         {
             _ioClientsReady.SignalAndWait();
-            var netClient = new TcpClient();
-            await netClient.ConnectAsync(IPAddress.Loopback, lbPort);
-            var rpcClient = new NetworkRpcClient(netClient, JsonRpcClient.ClientMode.Request);
+            var client = new TcpClient();
+            await client.ConnectAsync(IPAddress.Loopback, lbPort);
+            var rpcClient = new NetworkRpcClient(new TcpTransportLayer(client), JsonRpcClient.ClientMode.Request);
             _ioClientsReady.SignalAndWait();
             var reqTask = rpcClient.Request(new Request("ping", null, "0"));
-            await reqTask;
-            Console.WriteLine($"Server responded: {reqTask.Result}");
+            var response = await reqTask;
+            Console.WriteLine($"Server responded: {response}");
         }
 
         private static async Task NetServerThread()
@@ -40,7 +40,7 @@ namespace Extrasolar.Demo.Loopback
             listener.Start();
             _ioClientsReady.SignalAndWait();
             var client = await listener.AcceptTcpClientAsync();
-            var rpcClient = new NetworkRpcClient(client, JsonRpcClient.ClientMode.Response);
+            var rpcClient = new NetworkRpcClient(new TcpTransportLayer(client), JsonRpcClient.ClientMode.Response);
             rpcClient.RpcLayer.RequestPipeline.AddItemToStart((req) =>
             {
                 if (!req.IsNotification)

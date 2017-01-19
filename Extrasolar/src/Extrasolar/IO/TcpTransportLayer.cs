@@ -1,0 +1,20 @@
+﻿using System.IO;
+using System.Net.Sockets;
+
+namespace Extrasolar.IO
+{
+    public class TcpTransportLayer : ITransportLayer
+    {
+        private readonly TcpClient _tcpClient;
+
+        public TcpTransportLayer(TcpClient tcpClient)
+        {
+            this._tcpClient = tcpClient;
+        }
+
+        public Stream GetStream()
+        {
+            return _tcpClient.GetStream();
+        }
+    }
+}
