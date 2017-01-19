@@ -63,7 +63,7 @@ namespace Extrasolar.JsonRpc
                         {
                             var response = JsonConvert.DeserializeObject<Response>(dataJson);
                             // Spawn new handler
-                            var handlerTask = Task.Factory.StartNew(async () => await HandleReceivedResponse(response));
+                            var handlerTask = Task.Factory.StartNew(() => HandleReceivedResponse(response));
                         }
                         if (Mode == ClientMode.Response)
                         {
@@ -80,8 +80,16 @@ namespace Extrasolar.JsonRpc
             }
         }
 
-        private async Task HandleReceivedResponse(Response response)
+        private void HandleReceivedResponse(Response response)
         {
+            ResponseReceived?.Invoke(this, response);
+            lock (ResponseHandlers)
+            {
+                foreach (var handler in ResponseHandlers)
+                {
+                    handler.Invoke(response);
+                }
+            }
         }
 
         private async Task HandleReceivedRequest(Request request)
@@ -119,6 +127,14 @@ namespace Extrasolar.JsonRpc
             }
         }
 
+        public void AddResponseHandler(Action<Response> handler)
+        {
+            lock (ResponseHandlers)
+            {
+                ResponseHandlers.Add(handler);
+            }
+        }
+
         public void Dispose()
         {
             DataWriter?.Dispose();
@@ -133,8 +149,18 @@ namespace Extrasolar.JsonRpc
         protected List<Func<Request, Response>> RequestHandlers { get; } = new List<Func<Request, Response>>();
 
         /// <summary>
+        /// A list of callbacks that receive responses to previous requests.
+        /// </summary>
+        protected List<Action<Response>> ResponseHandlers { get; } = new List<Action<Response>>();
+
+        /// <summary>
         /// A notify-only event that fires whenever a request is received
         /// </summary>
         public event EventHandler<Request> RequestReceived;
+
+        /// <summary>
+        /// A notify-only event that fires whenever a response is received
+        /// </summary>
+        public event EventHandler<Response> ResponseReceived;
     }
 }
