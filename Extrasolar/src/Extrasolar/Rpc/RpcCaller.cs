@@ -21,7 +21,7 @@ namespace Extrasolar.Rpc
 
         public TInterface CreateClient()
         {
-            var client = CallProxy;
+            var client = CallProxy<TInterface>.CreateEmpty();
             return default(TInterface);
         }
 

@@ -2,9 +2,7 @@
 {
     public class ProxyFactory
     {
-        internal static TInterface Build<TInterface, TTarget>(CallProxy<TTarget> callProxy)
-            where TInterface : class
-            where TTarget : new()
+        internal static TInterface BuildInstance<TInterface>()
         {
             return default(TInterface);
         }

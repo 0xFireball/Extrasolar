@@ -1,35 +1,25 @@
-﻿using System;
-using System.Dynamic;
+﻿using System.Dynamic;
 using System.Reflection;
 
 namespace Extrasolar.Rpc
 {
-    internal class CallProxy<TTarget> : DynamicObject where TTarget : new()
+    internal class CallProxy<TInterface> : DynamicObject where TInterface : class
     {
-        private readonly TTarget _wrappedObject;
+        private TInterface _proxiedObject;
 
-        public static TInterface Create<TInterface>(TTarget obj) where TInterface : class
+        public CallProxy(TInterface target)
         {
-            if (!typeof(TInterface).GetTypeInfo().IsInterface)
-                throw new ArgumentException($"{nameof(TInterface)} must be an interface");
-
-            return ProxyFactory.Build<TInterface, TTarget>(new CallProxy<TTarget>(obj));
-        }
-
-        //you can make the contructor private so you are forced to use the Wrap method.
-        private CallProxy(TTarget obj)
-        {
-            _wrappedObject = obj;
+            _proxiedObject = target;
         }
 
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
         {
             try
             {
-                //do stuff here
+                // TODO: Processing
 
-                //call _wrappedObject object
-                result = _wrappedObject.GetType().GetTypeInfo().GetMethod(binder.Name).Invoke(_wrappedObject, args);
+                // Forward call to proxied object
+                result = _proxiedObject.GetType().GetTypeInfo().GetMethod(binder.Name).Invoke(_proxiedObject, args);
                 return true;
             }
             catch
@@ -37,6 +27,12 @@ namespace Extrasolar.Rpc
                 result = null;
                 return false;
             }
+        }
+
+        public static CallProxy<TInterface> CreateEmpty()
+        {
+            var emptyTarget = ProxyFactory.BuildInstance<TInterface>();
+            return new CallProxy<TInterface>(emptyTarget);
         }
     }
 }
