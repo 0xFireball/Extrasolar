@@ -18,7 +18,7 @@ namespace Extrasolar.JsonRpc.Types
 
         /// <summary>The error. null if no error occured.</summary>
         [JsonProperty("error")]
-        public Error Error { get; protected set; }
+        public virtual Error Error { get; protected set; }
 
         public override string ToString()
         {

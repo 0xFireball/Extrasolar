@@ -1,6 +1,5 @@
 ﻿using Extrasolar.JsonRpc;
 using Extrasolar.JsonRpc.Types;
-using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -20,7 +19,7 @@ namespace Extrasolar.Demo.MemIo
         private static async Task BasicMemIoClient2()
         {
             var rpcClient = new JsonRpcClient(_basicIoStream, JsonRpcClient.ClientMode.TwoWay);
-            await rpcClient.SendRequest(new Request("ping", null, 0));
+            await rpcClient.SendRequest(new Request("ping", null, "0"));
         }
 
         private static async Task BasicMemIoClient1()
@@ -28,7 +27,7 @@ namespace Extrasolar.Demo.MemIo
             var rpcClient = new JsonRpcClient(_basicIoStream, JsonRpcClient.ClientMode.TwoWay);
             rpcClient.AddRequestHandler((req) =>
             {
-                return new Response(req, null, null);
+                return new ResultResponse(req, null);
             });
         }
     }

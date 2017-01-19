@@ -1,4 +1,7 @@
-﻿namespace Extrasolar.JsonRpc.Types
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+namespace Extrasolar.JsonRpc.Types
 {
     public class ErrorResponse : Response
     {
@@ -11,5 +14,8 @@
             Id = id;
             Error = error;
         }
+
+        [JsonProperty("result", NullValueHandling = NullValueHandling.Ignore)]
+        public override JToken Result { get; protected set; }
     }
 }
