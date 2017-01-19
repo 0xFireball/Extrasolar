@@ -1,6 +1,7 @@
 ﻿using Extrasolar.JsonRpc.Types;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -57,7 +58,19 @@ namespace Extrasolar.JsonRpc
         private async Task HandleRequest(Request request)
         {
             RequestReceived?.Invoke(this, request);
-            var response = RequestHandler?.Invoke(request);
+            Response response = null;
+            lock (RequestHandlers)
+            {
+                foreach (var handler in RequestHandlers)
+                {
+                    var resp = handler.Invoke(request);
+                    if (resp != null)
+                    {
+                        response = resp;
+                        break;
+                    }
+                }
+            }
             await _transportLock.WaitAsync();
             await DataWriter.WriteAsync(response.ToString());
             await DataWriter.FlushAsync();
@@ -65,9 +78,11 @@ namespace Extrasolar.JsonRpc
         }
 
         /// <summary>
-        /// A callback that processes requests and returns responses
+        /// A list of callbacks that process requests and return responses.
+        /// They are evaluated in order until a Response object is received. If a handler
+        /// returns null, the next handler will be invoked.
         /// </summary>
-        public Func<Request, Response> RequestHandler { get; set; }
+        public List<Func<Request, Response>> RequestHandlers { get; } = new List<Func<Request, Response>>();
 
         /// <summary>
         /// A notify-only event that fires whenever a request is received
