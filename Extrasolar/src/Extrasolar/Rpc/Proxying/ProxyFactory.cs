@@ -175,18 +175,28 @@ namespace Extrasolar.Rpc.Proxying
             return result;
         }
 
-        public static MethodBuilder BindMethod(IMethodBinder binder, MethodInfo methodInfo, TypeBuilder typeBuilder, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
+        /// <summary>
+        /// Bind a generated proxy method to an existing target method
+        /// </summary>
+        /// <param name="binder"></param>
+        /// <param name="proxyMethodInfo"></param>
+        /// <param name="typeBuilder"></param>
+        /// <param name="ldindOpCodeTypeMap"></param>
+        /// <param name="stindOpCodeTypeMap"></param>
+        /// <returns></returns>
+        public static MethodBuilder BindMethod(IMethodBinder binder, MethodInfo proxyMethodInfo, TypeBuilder typeBuilder, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
         {
-            var paramInfos = methodInfo.GetParameters();
+            var paramInfos = proxyMethodInfo.GetParameters();
             int nofParams = paramInfos.Length;
             Type[] parameterTypes = new Type[nofParams];
             for (int i = 0; i < nofParams; i++) parameterTypes[i] = paramInfos[i].ParameterType;
-            Type returnType = methodInfo.ReturnType;
-            var methodBuilder = typeBuilder.DefineMethod(methodInfo.Name, MethodAttributes.Public | MethodAttributes.Virtual, returnType, parameterTypes);
+            Type returnType = proxyMethodInfo.ReturnType;
+            var methodBuilder = typeBuilder.DefineMethod(proxyMethodInfo.Name, MethodAttributes.Public | MethodAttributes.Virtual, returnType, parameterTypes);
 
             var mIL = methodBuilder.GetILGenerator();
             // TODO: Inject call to binder
-            GenerateILCodeForMethod()
+            var binderInvokeInfo = binder.GetType().GetMethod(nameof(IMethodBinder.InvokeMethod), BindingFlags.Instance | BindingFlags.NonPublic);
+            GenerateILBinding(binderInvokeInfo, proxyMethodInfo, mIL, parameterTypes, returnType, ldindOpCodeTypeMap, stindOpCodeTypeMap);
 
             return methodBuilder;
         }
@@ -303,25 +313,35 @@ namespace Extrasolar.Rpc.Proxying
             var methodBuilder = typeBuilder.DefineMethod(methodInfo.Name, MethodAttributes.Public | MethodAttributes.Virtual, returnType, parameterTypes);
 
             var mIL = methodBuilder.GetILGenerator();
-            GenerateILCodeForMethod(channelType, methodInfo, mIL, parameterTypes, methodBuilder.ReturnType, ldindOpCodeTypeMap, stindOpCodeTypeMap);
+            GenerateILBinding(channelType, methodInfo, mIL, parameterTypes, methodBuilder.ReturnType, ldindOpCodeTypeMap, stindOpCodeTypeMap);
             return methodBuilder;
         }
 
-        private static void GenerateILCodeForMethod(Type channelType, MethodInfo proxyMethodInfo, ILGenerator mIL, Type[] inputArgTypes, Type returnType, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
+        private static void GenerateILBinding(Type channelType, MethodInfo proxyMethodInfo, ILGenerator mIlGen, Type[] inputArgTypes, Type returnType, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
         {
             //get the MethodInfo for InvokeMethod
             var invokeMethodMI = channelType.GetMethod(INVOKE_METHOD, BindingFlags.Instance | BindingFlags.NonPublic);
-            GenerateILCodeForMethod(invokeMethodMI, proxyMethodInfo, mIL, inputArgTypes, returnType, ldindOpCodeTypeMap, stindOpCodeTypeMap);
+            GenerateILBinding(invokeMethodMI, proxyMethodInfo, mIlGen, inputArgTypes, returnType, ldindOpCodeTypeMap, stindOpCodeTypeMap);
         }
 
-        private static void GenerateILCodeForMethod(MethodInfo targetMethodInfo, MethodInfo proxyMethodInfo, ILGenerator mIL, Type[] inputArgTypes, Type returnType, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
+        /// <summary>
+        /// Generate IL to bind a generated proxy method to an existing target method
+        /// </summary>
+        /// <param name="targetMethodInfo"></param>
+        /// <param name="proxyMethodInfo"></param>
+        /// <param name="mIlGen"></param>
+        /// <param name="inputArgTypes"></param>
+        /// <param name="returnType"></param>
+        /// <param name="ldindOpCodeTypeMap"></param>
+        /// <param name="stindOpCodeTypeMap"></param>
+        private static void GenerateILBinding(MethodInfo targetMethodInfo, MethodInfo proxyMethodInfo, ILGenerator mIlGen, Type[] inputArgTypes, Type returnType, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
         {
-            mIL.Emit(OpCodes.Ldarg_0); //load "this"
+            mIlGen.Emit(OpCodes.Ldarg_0); //load "this"
 
             int nofArgs = inputArgTypes.Length;
 
             //declare local variables
-            var resultLB = mIL.DeclareLocal(typeof(object[])); // object[] result
+            var resultLB = mIlGen.DeclareLocal(typeof(object[])); // object[] result
 
             //set local value with method name and arg types to improve perfmance
             //metadata: methodInfo.Name | inputTypes[x].FullName .. |
@@ -333,96 +353,96 @@ namespace Extrasolar.Rpc.Proxying
                 metadata += "|" + string.Join("|", args);
             }
             //declare and assign string literal
-            var metaLB = mIL.DeclareLocal(typeof(string));
+            var metaLB = mIlGen.DeclareLocal(typeof(string));
 
 #if !NETSTANDARD1_6
             metaLB.SetLocalSymInfo("metaData", 1, 2);
 #endif
 
             //mIL.Emit(OpCodes.Dup);  //causes InvalidProgramException - Common Language Runtime detected an invalid program.
-            mIL.Emit(OpCodes.Ldstr, metadata);
-            mIL.Emit(OpCodes.Stloc_1); //load into metaData local variable
+            mIlGen.Emit(OpCodes.Ldstr, metadata);
+            mIlGen.Emit(OpCodes.Stloc_1); //load into metaData local variable
 
             //load metadata into first param for invokeMethodMI
             //mIL.Emit(OpCodes.Dup);  //causes InvalidProgramException - Common Language Runtime detected an invalid program.
-            mIL.Emit(OpCodes.Ldloc_1);
+            mIlGen.Emit(OpCodes.Ldloc_1);
 
-            mIL.Emit(OpCodes.Ldc_I4, nofArgs); //push the number of arguments
-            mIL.Emit(OpCodes.Newarr, typeof(object)); //create an array of objects
+            mIlGen.Emit(OpCodes.Ldc_I4, nofArgs); //push the number of arguments
+            mIlGen.Emit(OpCodes.Newarr, typeof(object)); //create an array of objects
 
             //store every input argument in the args array
             for (int i = 0; i < nofArgs; i++)
             {
                 Type inputType = inputArgTypes[i].IsByRef ? inputArgTypes[i].GetElementType() : inputArgTypes[i];
 
-                mIL.Emit(OpCodes.Dup);
-                mIL.Emit(OpCodes.Ldc_I4, i); //push the index onto the stack
-                mIL.Emit(OpCodes.Ldarg, i + 1); //load the i'th argument. This might be an address
+                mIlGen.Emit(OpCodes.Dup);
+                mIlGen.Emit(OpCodes.Ldc_I4, i); //push the index onto the stack
+                mIlGen.Emit(OpCodes.Ldarg, i + 1); //load the i'th argument. This might be an address
                 if (inputArgTypes[i].IsByRef)
                 {
                     if (inputType.GetTypeInfo().IsValueType)
                     {
                         if (inputType.GetTypeInfo().IsPrimitive)
                         {
-                            mIL.Emit(ldindOpCodeTypeMap[inputType]);
-                            mIL.Emit(OpCodes.Box, inputType);
+                            mIlGen.Emit(ldindOpCodeTypeMap[inputType]);
+                            mIlGen.Emit(OpCodes.Box, inputType);
                         }
                         else
                             throw new NotSupportedException("Non-primitive native types (e.g. Decimal and Guid) ByRef are not supported.");
                     }
                     else
-                        mIL.Emit(OpCodes.Ldind_Ref);
+                        mIlGen.Emit(OpCodes.Ldind_Ref);
                 }
                 else
                 {
                     if (inputArgTypes[i].GetTypeInfo().IsValueType)
-                        mIL.Emit(OpCodes.Box, inputArgTypes[i]);
+                        mIlGen.Emit(OpCodes.Box, inputArgTypes[i]);
                 }
-                mIL.Emit(OpCodes.Stelem_Ref); //store the reference in the args array
+                mIlGen.Emit(OpCodes.Stelem_Ref); //store the reference in the args array
             }
-            mIL.Emit(OpCodes.Call, targetMethodInfo);
-            mIL.Emit(OpCodes.Stloc, resultLB.LocalIndex); //store the result
+            mIlGen.Emit(OpCodes.Call, targetMethodInfo);
+            mIlGen.Emit(OpCodes.Stloc, resultLB.LocalIndex); //store the result
             //store the results in the arguments
             for (int i = 0; i < nofArgs; i++)
             {
                 if (inputArgTypes[i].IsByRef)
                 {
                     var inputType = inputArgTypes[i].GetElementType();
-                    mIL.Emit(OpCodes.Ldarg, i + 1); //load the address of the argument
-                    mIL.Emit(OpCodes.Ldloc, resultLB.LocalIndex); //load the result array
-                    mIL.Emit(OpCodes.Ldc_I4, i + 1); //load the index into the result array
-                    mIL.Emit(OpCodes.Ldelem_Ref); //load the value in the index of the array
+                    mIlGen.Emit(OpCodes.Ldarg, i + 1); //load the address of the argument
+                    mIlGen.Emit(OpCodes.Ldloc, resultLB.LocalIndex); //load the result array
+                    mIlGen.Emit(OpCodes.Ldc_I4, i + 1); //load the index into the result array
+                    mIlGen.Emit(OpCodes.Ldelem_Ref); //load the value in the index of the array
                     if (inputType.GetTypeInfo().IsValueType)
                     {
-                        mIL.Emit(OpCodes.Unbox, inputArgTypes[i].GetElementType());
-                        mIL.Emit(ldindOpCodeTypeMap[inputArgTypes[i].GetElementType()]);
-                        mIL.Emit(stindOpCodeTypeMap[inputArgTypes[i].GetElementType()]);
+                        mIlGen.Emit(OpCodes.Unbox, inputArgTypes[i].GetElementType());
+                        mIlGen.Emit(ldindOpCodeTypeMap[inputArgTypes[i].GetElementType()]);
+                        mIlGen.Emit(stindOpCodeTypeMap[inputArgTypes[i].GetElementType()]);
                     }
                     else
                     {
-                        mIL.Emit(OpCodes.Castclass, inputArgTypes[i].GetElementType());
-                        mIL.Emit(OpCodes.Stind_Ref); //store the unboxed value at the argument address
+                        mIlGen.Emit(OpCodes.Castclass, inputArgTypes[i].GetElementType());
+                        mIlGen.Emit(OpCodes.Stind_Ref); //store the unboxed value at the argument address
                     }
                 }
             }
             if (returnType != typeof(void))
             {
-                mIL.Emit(OpCodes.Ldloc, resultLB.LocalIndex); //load the result array
-                mIL.Emit(OpCodes.Ldc_I4, 0); //load the index of the return value. Alway 0
-                mIL.Emit(OpCodes.Ldelem_Ref); //load the value in the index of the array
+                mIlGen.Emit(OpCodes.Ldloc, resultLB.LocalIndex); //load the result array
+                mIlGen.Emit(OpCodes.Ldc_I4, 0); //load the index of the return value. Alway 0
+                mIlGen.Emit(OpCodes.Ldelem_Ref); //load the value in the index of the array
 
                 if (returnType.GetTypeInfo().IsValueType)
                 {
-                    mIL.Emit(OpCodes.Unbox, returnType); //unbox it
+                    mIlGen.Emit(OpCodes.Unbox, returnType); //unbox it
                     if (returnType.GetTypeInfo().IsPrimitive)        //deal with primitive vs struct value types
-                        mIL.Emit(ldindOpCodeTypeMap[returnType]);
+                        mIlGen.Emit(ldindOpCodeTypeMap[returnType]);
                     else
-                        mIL.Emit(OpCodes.Ldobj, returnType);
+                        mIlGen.Emit(OpCodes.Ldobj, returnType);
                 }
                 else
-                    mIL.Emit(OpCodes.Castclass, returnType);
+                    mIlGen.Emit(OpCodes.Castclass, returnType);
             }
-            mIL.Emit(OpCodes.Ret);
+            mIlGen.Emit(OpCodes.Ret);
         }
     }
 }
