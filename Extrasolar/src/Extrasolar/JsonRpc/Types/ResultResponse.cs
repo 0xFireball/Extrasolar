@@ -17,6 +17,6 @@ namespace Extrasolar.JsonRpc.Types
         }
 
         [JsonProperty("error", NullValueHandling = NullValueHandling.Ignore)]
-        public override Error Error { get; protected set; }
+        public override Error Error { get; set; }
     }
 }

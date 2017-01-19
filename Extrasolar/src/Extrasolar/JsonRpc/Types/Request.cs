@@ -21,15 +21,15 @@ namespace Extrasolar.JsonRpc.Types
 
         /// <summary>Unique request identifier.</summary>
         [JsonProperty("id")]
-        public string Id { get; protected set; }
+        public string Id { get; set; }
 
         /// <summary>The name of the remote method.</summary>
         [JsonProperty("method", Required = Required.Always)]
-        public string Method { get; protected set; }
+        public string Method { get; set; }
 
         /// <summary>Optional parameters.</summary>
         [JsonProperty("params")]
-        public JToken Parameters { get; protected set; }
+        public JToken Parameters { get; set; }
 
         public bool IsNotification => Id == null;
 

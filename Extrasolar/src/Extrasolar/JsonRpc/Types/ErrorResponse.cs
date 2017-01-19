@@ -16,6 +16,6 @@ namespace Extrasolar.JsonRpc.Types
         }
 
         [JsonProperty("result", NullValueHandling = NullValueHandling.Ignore)]
-        public override JToken Result { get; protected set; }
+        public override JToken Result { get; set; }
     }
 }
