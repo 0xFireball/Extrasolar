@@ -32,7 +32,9 @@ namespace Extrasolar.IO
 
         private void HandleRpcResponse(Response response)
         {
-            throw new NotImplementedException();
+            // Store result and signal that response is ready
+            ResultCache[response.Id] = response;
+            RequestQueue[response.Id].Set();
         }
 
         private Response HandleRpcRequest(Request request)
@@ -40,12 +42,20 @@ namespace Extrasolar.IO
             throw new NotImplementedException();
         }
 
-        private async Task<Response> SendRequest(Request request)
+        private async Task<Response> Request(Request request)
         {
             // Send request
+            var resultReady = new AutoResetEvent(false);
+            RequestQueue[request.Id] = resultReady;
             await RpcLayer.SendRequest(request);
+            await Task.Run(() => resultReady.WaitOne());
+            // Retrieve result
+            var result = ResultCache[request.Id];
+            ResultCache.Remove(request.Id);
+            return result;
         }
 
         protected Dictionary<string, AutoResetEvent> RequestQueue { get; } = new Dictionary<string, AutoResetEvent>();
+        protected Dictionary<string, Response> ResultCache { get; } = new Dictionary<string, Response>();
     }
 }
