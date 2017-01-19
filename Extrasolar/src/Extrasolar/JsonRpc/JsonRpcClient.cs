@@ -13,8 +13,8 @@ namespace Extrasolar.JsonRpc
         [Flags]
         public enum ClientMode
         {
-            Request,
-            Response,
+            Request = 1 << 0,
+            Response = 1 << 1,
             TwoWay = Request | Response
         }
 
@@ -58,9 +58,16 @@ namespace Extrasolar.JsonRpc
                 var requestJson = await DataReader.ReadLineAsync();
                 if (requestJson != null)
                 {
-                    var request = JsonConvert.DeserializeObject<Request>(requestJson);
-                    // Spawn new handler
-                    var handlerTask = Task.Factory.StartNew(async () => await HandleRequest(request));
+                    try
+                    {
+                        var request = JsonConvert.DeserializeObject<Request>(requestJson);
+                        // Spawn new handler
+                        var handlerTask = Task.Factory.StartNew(async () => await HandleRequest(request));
+                    }
+                    catch (JsonSerializationException)
+                    {
+                        // Invalid data
+                    }
                 }
             }
         }
