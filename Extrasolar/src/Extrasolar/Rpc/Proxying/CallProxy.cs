@@ -1,7 +1,7 @@
 ﻿using System.Dynamic;
 using System.Reflection;
 
-namespace Extrasolar.Rpc
+namespace Extrasolar.Rpc.Proxying
 {
     internal class CallProxy<TInterface> : DynamicObject where TInterface : class
     {
@@ -31,7 +31,7 @@ namespace Extrasolar.Rpc
 
         public static CallProxy<TInterface> CreateEmpty()
         {
-            var emptyTarget = ProxyFactory.BuildInstance<TInterface>();
+            var emptyTarget = InstanceGenerator.BuildInstance<TInterface>();
             return new CallProxy<TInterface>(emptyTarget);
         }
     }

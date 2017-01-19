@@ -1,6 +1,6 @@
-﻿namespace Extrasolar.Rpc
+﻿namespace Extrasolar.Rpc.Proxying
 {
-    public class ProxyFactory
+    public class InstanceGenerator
     {
         internal static TInterface BuildInstance<TInterface>()
         {
