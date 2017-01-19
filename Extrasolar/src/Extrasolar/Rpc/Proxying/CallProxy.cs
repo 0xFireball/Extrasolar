@@ -31,7 +31,7 @@ namespace Extrasolar.Rpc.Proxying
 
         public static CallProxy<TInterface> CreateEmpty()
         {
-            var emptyTarget = InstanceGenerator.BuildInstance<TInterface>();
+            var emptyTarget = ProxyGenerator.BuildInstance<TInterface>();
             return new CallProxy<TInterface>(emptyTarget);
         }
     }

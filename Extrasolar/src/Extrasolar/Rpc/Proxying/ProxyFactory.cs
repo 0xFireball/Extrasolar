@@ -13,17 +13,40 @@ namespace Extrasolar.Rpc.Proxying
         private const string PROXY_MODULE = "ProxyModule";
         private const string PROXY = "Proxy";
 
-        //pooled dictionary achieves same or better performance as ThreadStatic without creating as many builders under average load
+        // pooled dictionary achieves same or better performance as ThreadStatic without creating as many builders under average load
         private static PooledDictionary<string, ProxyBuilder> _proxies = new PooledDictionary<string, ProxyBuilder>();
+
+        public static TInterface CreateEmptyProxy<TInterface>(Type parentType) where TInterface : class
+        {
+            Type interfaceType = typeof(TInterface);
+
+            // derive unique key for this dynamic assembly by interface, channel and ctor type names
+            var proxyName = interfaceType.FullName + parentType.FullName;
+
+            // get pooled proxy builder
+            ProxyBuilder proxyBuilder = null;
+            TInterface proxy = null;
+            try
+            {
+                proxyBuilder = _proxies.Request(proxyName, () => CreateSimpleProxyBuilder(proxyName, interfaceType, parentType));
+                proxy = CreateEmptyProxy<TInterface>(proxyBuilder);
+            }
+            finally
+            {
+                // return builder to the pool
+                if (null != proxyBuilder) _proxies.Release(proxyName, proxyBuilder);
+            }
+            return proxy;
+        }
 
         public static TInterface CreateProxy<TInterface>(Type channelType, Type ctorArgType, object channelCtorValue) where TInterface : class
         {
             Type interfaceType = typeof(TInterface);
 
-            //derive unique key for this dynamic assembly by interface, channel and ctor type names
+            // derive unique key for this dynamic assembly by interface, channel and ctor type names
             var proxyName = interfaceType.FullName + channelType.FullName + ctorArgType.FullName;
 
-            //get pooled proxy builder
+            // get pooled proxy builder
             var localChannelType = channelType;
             var localCtorArgType = ctorArgType;
             ProxyBuilder proxyBuilder = null;
@@ -35,7 +58,7 @@ namespace Extrasolar.Rpc.Proxying
             }
             finally
             {
-                //return builder to the pool
+                // return builder to the pool
                 if (null != proxyBuilder) _proxies.Release(proxyName, proxyBuilder);
             }
             return proxy;
@@ -56,39 +79,46 @@ namespace Extrasolar.Rpc.Proxying
             return null;
         }
 
-        private static ProxyBuilder CreateProxyBuilder(string proxyName, Type interfaceType, Type channelType, Type ctorArgType)
+        private static TInterface CreateEmptyProxy<TInterface>(ProxyBuilder proxyBuilder) where TInterface : class
         {
-#if NETSTANDARD1_6
+            //create the type and construct an instance
+            Type[] ctorArgTypes = { typeof(Type) };
+            var tInfo = proxyBuilder.TypeBuilder.CreateTypeInfo();
+            var t = tInfo.AsType();
+            var constructorInfo = t.GetConstructor(ctorArgTypes);
+            if (constructorInfo != null)
+            {
+                var instance = (TInterface)constructorInfo.Invoke(new object[] { typeof(TInterface) });
+                return instance;
+            }
+            return null;
+        }
+
+        private static ProxyBuilder CreateSimpleProxyBuilder(string proxyName, Type interfaceType, Type parentType)
+        {
             // create a new assembly for the proxy
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(PROXY_ASSEMBLY), AssemblyBuilderAccess.Run);
 
             // create a new module for the proxy
             var moduleBuilder = assemblyBuilder.DefineDynamicModule(PROXY_MODULE);
-#else
-            AppDomain domain = Thread.GetDomain();
-            // create a new assembly for the proxy
-            AssemblyBuilder assemblyBuilder = domain.DefineDynamicAssembly(new AssemblyName(PROXY_ASSEMBLY), AssemblyBuilderAccess.Run);
-
-            // create a new module for the proxy
-            ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule(PROXY_MODULE, true);
-#endif
 
             // Set the class to be public and sealed
             TypeAttributes typeAttributes = TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed;
 
             // Construct the type builder
-            var typeBuilder = moduleBuilder.DefineType(interfaceType.Name + PROXY, typeAttributes, channelType);
+            var typeBuilder = moduleBuilder.DefineType(interfaceType.Name + PROXY, typeAttributes, parentType);
             var allInterfaces = new List<Type>(interfaceType.GetInterfaces());
             allInterfaces.Add(interfaceType);
 
-            //add the interface
+            // add the interface
             typeBuilder.AddInterfaceImplementation(interfaceType);
 
-            //construct the constructor
-            Type[] ctorArgTypes = { typeof(Type), ctorArgType };
-            CreateConstructor(channelType, typeBuilder, ctorArgTypes);
+            // construct the constructor
+            //Type[] ctorArgTypes = { typeof(Type), ctorArgType };
+            Type[] ctorArgTypes = { typeof(Type) };
+            CreateConstructor(parentType, typeBuilder, ctorArgTypes);
 
-            //construct the type maps
+            // construct the type maps
             var ldindOpCodeTypeMap = new Dictionary<Type, OpCode>();
             ldindOpCodeTypeMap.Add(typeof(Boolean), OpCodes.Ldind_I1);
             ldindOpCodeTypeMap.Add(typeof(Byte), OpCodes.Ldind_U1);
@@ -116,7 +146,88 @@ namespace Extrasolar.Rpc.Proxying
             stindOpCodeTypeMap.Add(typeof(Double), OpCodes.Stind_R8);
             stindOpCodeTypeMap.Add(typeof(Single), OpCodes.Stind_R4);
 
-            //construct the method builders from the method infos defined in the interface
+            // construct the method builders from the method infos defined in the interface
+            var methods = GetAllMethods(allInterfaces);
+            foreach (MethodInfo methodInfo in methods)
+            {
+                var methodBuilder = ConstructMethod(parentType, methodInfo, typeBuilder, ldindOpCodeTypeMap, stindOpCodeTypeMap);
+                typeBuilder.DefineMethodOverride(methodBuilder, methodInfo);
+            }
+
+            // create proxy builder
+            var result = new ProxyBuilder
+            {
+                ProxyName = proxyName,
+                InterfaceType = interfaceType,
+                CtorType = null, // Shouldn't matter if we use the Empty proxy builder
+                AssemblyBuilder = assemblyBuilder,
+                ModuleBuilder = moduleBuilder,
+                TypeBuilder = typeBuilder
+            };
+            return result;
+        }
+
+        private static ProxyBuilder CreateProxyBuilder(string proxyName, Type interfaceType, Type channelType, Type ctorArgType)
+        {
+#if NETSTANDARD1_6
+            // create a new assembly for the proxy
+            var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(PROXY_ASSEMBLY), AssemblyBuilderAccess.Run);
+
+            // create a new module for the proxy
+            var moduleBuilder = assemblyBuilder.DefineDynamicModule(PROXY_MODULE);
+#else
+            AppDomain domain = Thread.GetDomain();
+            // create a new assembly for the proxy
+            AssemblyBuilder assemblyBuilder = domain.DefineDynamicAssembly(new AssemblyName(PROXY_ASSEMBLY), AssemblyBuilderAccess.Run);
+
+            // create a new module for the proxy
+            ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule(PROXY_MODULE, true);
+#endif
+
+            // Set the class to be public and sealed
+            TypeAttributes typeAttributes = TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed;
+
+            // Construct the type builder
+            var typeBuilder = moduleBuilder.DefineType(interfaceType.Name + PROXY, typeAttributes, channelType);
+            var allInterfaces = new List<Type>(interfaceType.GetInterfaces());
+            allInterfaces.Add(interfaceType);
+
+            // add the interface
+            typeBuilder.AddInterfaceImplementation(interfaceType);
+
+            // construct the constructor
+            Type[] ctorArgTypes = { typeof(Type), ctorArgType };
+            CreateConstructor(channelType, typeBuilder, ctorArgTypes);
+
+            // construct the type maps
+            var ldindOpCodeTypeMap = new Dictionary<Type, OpCode>();
+            ldindOpCodeTypeMap.Add(typeof(Boolean), OpCodes.Ldind_I1);
+            ldindOpCodeTypeMap.Add(typeof(Byte), OpCodes.Ldind_U1);
+            ldindOpCodeTypeMap.Add(typeof(SByte), OpCodes.Ldind_I1);
+            ldindOpCodeTypeMap.Add(typeof(Int16), OpCodes.Ldind_I2);
+            ldindOpCodeTypeMap.Add(typeof(UInt16), OpCodes.Ldind_U2);
+            ldindOpCodeTypeMap.Add(typeof(Int32), OpCodes.Ldind_I4);
+            ldindOpCodeTypeMap.Add(typeof(UInt32), OpCodes.Ldind_U4);
+            ldindOpCodeTypeMap.Add(typeof(Int64), OpCodes.Ldind_I8);
+            ldindOpCodeTypeMap.Add(typeof(UInt64), OpCodes.Ldind_I8);
+            ldindOpCodeTypeMap.Add(typeof(Char), OpCodes.Ldind_U2);
+            ldindOpCodeTypeMap.Add(typeof(Double), OpCodes.Ldind_R8);
+            ldindOpCodeTypeMap.Add(typeof(Single), OpCodes.Ldind_R4);
+            var stindOpCodeTypeMap = new Dictionary<Type, OpCode>();
+            stindOpCodeTypeMap.Add(typeof(Boolean), OpCodes.Stind_I1);
+            stindOpCodeTypeMap.Add(typeof(Byte), OpCodes.Stind_I1);
+            stindOpCodeTypeMap.Add(typeof(SByte), OpCodes.Stind_I1);
+            stindOpCodeTypeMap.Add(typeof(Int16), OpCodes.Stind_I2);
+            stindOpCodeTypeMap.Add(typeof(UInt16), OpCodes.Stind_I2);
+            stindOpCodeTypeMap.Add(typeof(Int32), OpCodes.Stind_I4);
+            stindOpCodeTypeMap.Add(typeof(UInt32), OpCodes.Stind_I4);
+            stindOpCodeTypeMap.Add(typeof(Int64), OpCodes.Stind_I8);
+            stindOpCodeTypeMap.Add(typeof(UInt64), OpCodes.Stind_I8);
+            stindOpCodeTypeMap.Add(typeof(Char), OpCodes.Stind_I2);
+            stindOpCodeTypeMap.Add(typeof(Double), OpCodes.Stind_R8);
+            stindOpCodeTypeMap.Add(typeof(Single), OpCodes.Stind_R4);
+
+            // construct the method builders from the method infos defined in the interface
             var methods = GetAllMethods(allInterfaces);
             foreach (MethodInfo methodInfo in methods)
             {
@@ -124,7 +235,7 @@ namespace Extrasolar.Rpc.Proxying
                 typeBuilder.DefineMethodOverride(methodBuilder, methodInfo);
             }
 
-            //create proxy builder
+            // create proxy builder
             var result = new ProxyBuilder
             {
                 ProxyName = proxyName,
