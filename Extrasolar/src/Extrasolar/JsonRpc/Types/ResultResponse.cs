@@ -5,6 +5,11 @@ namespace Extrasolar.JsonRpc.Types
 {
     public class ResultResponse : Response
     {
+        [JsonConstructor]
+        internal ResultResponse()
+        {
+        }
+
         public ResultResponse(Request request, JToken result = null) : this(request.Id, result)
         {
         }

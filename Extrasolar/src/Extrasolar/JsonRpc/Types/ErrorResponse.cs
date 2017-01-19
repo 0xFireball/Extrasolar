@@ -5,6 +5,11 @@ namespace Extrasolar.JsonRpc.Types
 {
     public class ErrorResponse : Response
     {
+        [JsonConstructor]
+        internal ErrorResponse()
+        {
+        }
+
         public ErrorResponse(Request request, Error error = null) : this(request.Id, error)
         {
         }
