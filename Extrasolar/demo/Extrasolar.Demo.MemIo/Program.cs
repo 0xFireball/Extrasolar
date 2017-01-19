@@ -9,7 +9,7 @@ namespace Extrasolar.Demo.MemIo
 {
     public class Program
     {
-        private static MemoryStream _basicIoStream = new MemoryStream();
+        //private static Stream _basicIoStream = Console.OpenStandardOutput();
         private static Barrier _ioClientsReady = new Barrier(2);
 
         public static void Main()
@@ -22,14 +22,14 @@ namespace Extrasolar.Demo.MemIo
 
         private static async Task BasicMemIoClient2()
         {
-            var rpcClient = new JsonRpcClient(_basicIoStream, JsonRpcClient.ClientMode.Request);
+            var rpcClient = new JsonRpcClient(Console.OpenStandardInput(), JsonRpcClient.ClientMode.Request);
             _ioClientsReady.SignalAndWait();
             await rpcClient.SendRequest(new Request("ping", null, "0"));
         }
 
         private static async Task BasicMemIoClient1()
         {
-            var rpcClient = new JsonRpcClient(_basicIoStream, JsonRpcClient.ClientMode.Response);
+            var rpcClient = new JsonRpcClient(Console.OpenStandardOutput(), JsonRpcClient.ClientMode.Response);
             rpcClient.AddRequestHandler((req) =>
             {
                 if (!req.IsNotification)

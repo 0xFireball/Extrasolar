@@ -19,8 +19,8 @@ namespace Extrasolar.JsonRpc
         }
 
         public Stream TransportStream { get; set; }
-        public StreamWriter DataWriter { get; private set; }
-        public StreamReader DataReader { get; private set; }
+        protected StreamWriter DataWriter { get; private set; }
+        protected StreamReader DataReader { get; private set; }
         public ClientMode Mode { get; }
         public bool Listening => Mode.HasFlag(ClientMode.Response);
 
@@ -29,9 +29,16 @@ namespace Extrasolar.JsonRpc
         public JsonRpcClient(Stream transportStream, ClientMode clientMode = ClientMode.Request | ClientMode.Response)
         {
             TransportStream = transportStream;
-            DataWriter = new StreamWriter(TransportStream);
-            DataReader = new StreamReader(TransportStream);
             Mode = clientMode;
+            if (Mode.HasFlag(ClientMode.Request))
+            {
+                DataWriter = new StreamWriter(TransportStream);
+            }
+            if (Mode.HasFlag(ClientMode.Response))
+            {
+                DataReader = new StreamReader(TransportStream);
+            }
+
             if (Mode.HasFlag(ClientMode.Response))
             {
                 Task.Factory.StartNew(ReceiveDataEventLoop);
