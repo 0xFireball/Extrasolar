@@ -14,6 +14,7 @@ namespace Extrasolar.Demo.MemIo
             // Test basic MemIO JSON RPC
             Task.Factory.StartNew(BasicMemIoClient1);
             Task.Factory.StartNew(BasicMemIoClient2);
+            Task.Yield().GetAwaiter().GetResult();
         }
 
         private static async Task BasicMemIoClient2()
@@ -27,7 +28,11 @@ namespace Extrasolar.Demo.MemIo
             var rpcClient = new JsonRpcClient(_basicIoStream, JsonRpcClient.ClientMode.TwoWay);
             rpcClient.AddRequestHandler((req) =>
             {
-                return new ResultResponse(req, null);
+                if (!req.IsNotification)
+                {
+                    return new ResultResponse(req, null);
+                }
+                return null;
             });
         }
     }

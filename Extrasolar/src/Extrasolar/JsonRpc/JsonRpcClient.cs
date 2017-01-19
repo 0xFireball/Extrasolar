@@ -71,10 +71,15 @@ namespace Extrasolar.JsonRpc
                     }
                 }
             }
-            await _transportLock.WaitAsync();
-            await DataWriter.WriteAsync(response.ToString());
-            await DataWriter.FlushAsync();
-            _transportLock.Release();
+            if (response != null)
+            {
+                // Only if response was handled
+                // Remember, notifications do not get a reply
+                await _transportLock.WaitAsync();
+                await DataWriter.WriteAsync(response.ToString());
+                await DataWriter.FlushAsync();
+                _transportLock.Release();
+            }
         }
 
         public void AddRequestHandler(Func<Request, Response> handler)
