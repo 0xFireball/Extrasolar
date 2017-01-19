@@ -17,7 +17,7 @@ namespace Extrasolar.JsonRpc.Types
         /// JSON-RPC protocol version
         /// </summary>
         [JsonProperty("jsonrpc", Required = Required.Always)]
-        public string JsonRpc => "2.0";
+        public string JsonRpc => JsonRpc2Version;
 
         /// <summary>Unique request identifier.</summary>
         [JsonProperty("id")]
@@ -37,5 +37,7 @@ namespace Extrasolar.JsonRpc.Types
         {
             return JsonConvert.SerializeObject(this);
         }
+
+        public const string JsonRpc2Version = "2.0";
     }
 }

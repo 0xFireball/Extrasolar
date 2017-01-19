@@ -21,11 +21,11 @@ namespace Extrasolar.IO
             RpcLayer = new JsonRpcClient(tcpClient.GetStream(), Mode);
             if (Mode.HasFlag(JsonRpcClient.ClientMode.Response))
             {
-                RpcLayer.RequestPipeline.AddItemToEnd(HandleRpcRequest);
+                RpcLayer.RequestPipeline.AddItemToStart(HandleRpcRequest);
             }
             if (Mode.HasFlag(JsonRpcClient.ClientMode.Request))
             {
-                RpcLayer.ResponsePipeline.AddItemToEnd(HandleRpcResponse);
+                RpcLayer.ResponsePipeline.AddItemToStart(HandleRpcResponse);
             }
         }
 
@@ -43,7 +43,7 @@ namespace Extrasolar.IO
             return null;
         }
 
-        private async Task<Response> Request(Request request)
+        public async Task<Response> Request(Request request)
         {
             // Send request
             var resultReady = new AutoResetEvent(false);
