@@ -1,6 +1,7 @@
 ﻿using Extrasolar.JsonRpc.Types;
 using Extrasolar.Types;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.Threading;
@@ -54,7 +55,17 @@ namespace Extrasolar.JsonRpc
                     {
                         if (Mode == ClientMode.Request)
                         {
-                            var response = JsonConvert.DeserializeObject<Response>(dataJson);
+                            Response response;
+                            var dataObject = JObject.Parse(dataJson);
+                            var successful = dataObject["error"] == null;
+                            if (successful)
+                            {
+                                response = dataObject.ToObject<ResultResponse>();
+                            }
+                            else
+                            {
+                                response = dataObject.ToObject<ErrorResponse>();
+                            }
                             // Spawn new handler
                             var handlerTask = Task.Factory.StartNew(() => HandleReceivedResponse(response));
                         }
