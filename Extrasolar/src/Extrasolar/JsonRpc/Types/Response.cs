@@ -14,6 +14,7 @@ namespace Extrasolar.JsonRpc.Types
         public string Id { get; protected set; }
 
         /// <summary>The result if no error occured.</summary>
+        [JsonProperty("result")]
         public virtual JToken Result { get; protected set; }
 
         /// <summary>The error. null if no error occured.</summary>
