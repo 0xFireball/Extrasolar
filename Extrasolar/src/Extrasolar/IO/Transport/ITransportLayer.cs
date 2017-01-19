@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace Extrasolar.IO
+namespace Extrasolar.IO.Transport
 {
     public interface ITransportLayer
     {

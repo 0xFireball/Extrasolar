@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Net.Sockets;
 
-namespace Extrasolar.IO
+namespace Extrasolar.IO.Transport
 {
     public class TcpTransportLayer : ITransportLayer
     {

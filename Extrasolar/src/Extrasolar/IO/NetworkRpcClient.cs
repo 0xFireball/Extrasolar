@@ -1,7 +1,7 @@
-﻿using Extrasolar.JsonRpc;
+﻿using Extrasolar.IO.Transport;
+using Extrasolar.JsonRpc;
 using Extrasolar.JsonRpc.Types;
 using System.Collections.Generic;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 

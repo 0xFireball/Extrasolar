@@ -1,4 +1,5 @@
 ﻿using Extrasolar.IO;
+using Extrasolar.IO.Transport;
 using Extrasolar.JsonRpc;
 using Extrasolar.JsonRpc.Types;
 using Extrasolar.Rpc;
@@ -14,6 +15,8 @@ namespace Extrasolar.Demo.Loopback
     {
         private static Barrier _ioClientsReady = new Barrier(2);
         private static int lbPort = 28754;
+        private static TcpClient _clientSock;
+        private static TcpClient _serverSock;
 
         public static void Main()
         {
@@ -31,6 +34,7 @@ namespace Extrasolar.Demo.Loopback
         {
             _ioClientsReady.SignalAndWait();
             var client = new TcpClient();
+            _clientSock = client;
             await client.ConnectAsync(IPAddress.Loopback, lbPort);
             var rpcClient = new NetworkRpcClient(new TcpTransportLayer(client), JsonRpcClient.ClientMode.Request);
             _ioClientsReady.SignalAndWait();
@@ -45,6 +49,7 @@ namespace Extrasolar.Demo.Loopback
             listener.Start();
             _ioClientsReady.SignalAndWait();
             var client = await listener.AcceptTcpClientAsync();
+            _serverSock = client;
             var rpcClient = new NetworkRpcClient(new TcpTransportLayer(client), JsonRpcClient.ClientMode.Response);
             rpcClient.RpcLayer.RequestPipeline.AddItemToStart((req) =>
             {
