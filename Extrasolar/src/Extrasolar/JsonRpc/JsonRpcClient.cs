@@ -8,12 +8,6 @@ namespace Extrasolar.JsonRpc
 {
     public class JsonRpcClient
     {
-        public Stream TransportStream { get; set; }
-        public StreamWriter DataWriter { get; private set; }
-        public StreamReader DataReader { get; private set; }
-
-        public bool Listening { get; set; } = true;
-
         [Flags]
         public enum ClientMode
         {
@@ -21,7 +15,12 @@ namespace Extrasolar.JsonRpc
             Response
         }
 
+        public Stream TransportStream { get; set; }
+        public StreamWriter DataWriter { get; private set; }
+        public StreamReader DataReader { get; private set; }
+
         public ClientMode Mode { get; }
+        public bool Listening => Mode.HasFlag(ClientMode.Response);
 
         public JsonRpcClient(Stream transportStream, ClientMode clientMode = ClientMode.Request | ClientMode.Response)
         {
@@ -43,19 +42,31 @@ namespace Extrasolar.JsonRpc
 
         public async Task ReceiveDataEventLoop()
         {
-            var requestJson = await DataReader.ReadLineAsync();
-            var request = JsonConvert.DeserializeObject<Request>(requestJson);
-            // Spawn new handler
-            var handlerTask = Task.Factory.StartNew(async () => await HandleRequest(request));
+            while (Listening)
+            {
+                var requestJson = await DataReader.ReadLineAsync();
+                var request = JsonConvert.DeserializeObject<Request>(requestJson);
+                // Spawn new handler
+                var handlerTask = Task.Factory.StartNew(async () => await HandleRequest(request));
+            }
         }
 
         private async Task HandleRequest(Request request)
         {
+            RequestReceived?.Invoke(this, request);
             var response = RequestHandler?.Invoke(request);
             await DataWriter.WriteAsync(response.ToString());
             await DataWriter.FlushAsync();
         }
 
+        /// <summary>
+        /// A callback that processes requests and returns responses
+        /// </summary>
         public Func<Request, Response> RequestHandler { get; set; }
+
+        /// <summary>
+        /// A notify-only event that fires whenever a request is received
+        /// </summary>
+        public event EventHandler<Request> RequestReceived;
     }
 }
