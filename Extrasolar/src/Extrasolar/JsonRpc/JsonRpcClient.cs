@@ -77,12 +77,20 @@ namespace Extrasolar.JsonRpc
             _transportLock.Release();
         }
 
+        public void AddRequestHandler(Func<Request, Response> handler)
+        {
+            lock (RequestHandlers)
+            {
+                RequestHandlers.Add(handler);
+            }
+        }
+
         /// <summary>
         /// A list of callbacks that process requests and return responses.
         /// They are evaluated in order until a Response object is received. If a handler
         /// returns null, the next handler will be invoked.
         /// </summary>
-        public List<Func<Request, Response>> RequestHandlers { get; } = new List<Func<Request, Response>>();
+        protected List<Func<Request, Response>> RequestHandlers { get; } = new List<Func<Request, Response>>();
 
         /// <summary>
         /// A notify-only event that fires whenever a request is received
