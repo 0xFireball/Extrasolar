@@ -1,12 +1,13 @@
 ﻿using Extrasolar.IO;
 using Extrasolar.JsonRpc.Types;
+using Extrasolar.Rpc;
 using Newtonsoft.Json;
 using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Extrasolar.Rpc
 {
-    public class RpcCaller<TInterface>
+    public class RpcCaller<TInterface> where TInterface : class
     {
         public NetworkRpcClient RpcClient { get; set; }
 
@@ -16,6 +17,12 @@ namespace Extrasolar.Rpc
         {
             RpcClient = netRpcClient;
             var methods = typeof(TInterface).GetTypeInfo().GetMethods();
+        }
+
+        public TInterface CreateClient()
+        {
+            var client = CallProxy;
+            return default(TInterface);
         }
 
         public async Task<Response> CallByNameAsync(string methodName, params object[] args)
