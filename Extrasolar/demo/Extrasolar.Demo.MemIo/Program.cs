@@ -28,7 +28,7 @@ namespace Extrasolar.Demo.MemIo
             var rpcClient = new JsonRpcClient(_basicIoStream, JsonRpcClient.ClientMode.TwoWay);
             rpcClient.AddRequestHandler((req) =>
             {
-                return new Response();
+                return new Response(req, null, null);
             });
         }
     }
