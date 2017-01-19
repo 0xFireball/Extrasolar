@@ -6,7 +6,7 @@ using System.Reflection.Emit;
 
 namespace Extrasolar.Rpc.Proxying
 {
-    public static class ProxyFactory
+    internal static class ProxyFactory
     {
         private const string PROXY_ASSEMBLY = "ProxyAssembly";
         private const string INVOKE_METHOD = "InvokeMethod";
@@ -341,7 +341,7 @@ namespace Extrasolar.Rpc.Proxying
             int nofArgs = inputArgTypes.Length;
 
             //declare local variables
-            var resultLB = mIlGen.DeclareLocal(typeof(object[])); // object[] result
+            var resultLb = mIlGen.DeclareLocal(typeof(object[])); // object[] result
 
             //set local value with method name and arg types to improve perfmance
             //metadata: methodInfo.Name | inputTypes[x].FullName .. |
@@ -359,16 +359,16 @@ namespace Extrasolar.Rpc.Proxying
             metaLB.SetLocalSymInfo("metaData", 1, 2);
 #endif
 
-            //mIL.Emit(OpCodes.Dup);  //causes InvalidProgramException - Common Language Runtime detected an invalid program.
+            //mIL.Emit(OpCodes.Dup);  // causes InvalidProgramException - Common Language Runtime detected an invalid program.
             mIlGen.Emit(OpCodes.Ldstr, metadata);
             mIlGen.Emit(OpCodes.Stloc_1); //load into metaData local variable
 
-            //load metadata into first param for invokeMethodMI
-            //mIL.Emit(OpCodes.Dup);  //causes InvalidProgramException - Common Language Runtime detected an invalid program.
+            // load metadata into first param for invokeMethodMI
+            // mIL.Emit(OpCodes.Dup);  // causes InvalidProgramException - Common Language Runtime detected an invalid program.
             mIlGen.Emit(OpCodes.Ldloc_1);
 
-            mIlGen.Emit(OpCodes.Ldc_I4, nofArgs); //push the number of arguments
-            mIlGen.Emit(OpCodes.Newarr, typeof(object)); //create an array of objects
+            mIlGen.Emit(OpCodes.Ldc_I4, nofArgs); // push the number of arguments
+            mIlGen.Emit(OpCodes.Newarr, typeof(object)); // create an array of objects
 
             //store every input argument in the args array
             for (int i = 0; i < nofArgs; i++)
@@ -401,7 +401,7 @@ namespace Extrasolar.Rpc.Proxying
                 mIlGen.Emit(OpCodes.Stelem_Ref); //store the reference in the args array
             }
             mIlGen.Emit(OpCodes.Call, targetMethodInfo);
-            mIlGen.Emit(OpCodes.Stloc, resultLB.LocalIndex); //store the result
+            mIlGen.Emit(OpCodes.Stloc, resultLb.LocalIndex); //store the result
             //store the results in the arguments
             for (int i = 0; i < nofArgs; i++)
             {
@@ -409,7 +409,7 @@ namespace Extrasolar.Rpc.Proxying
                 {
                     var inputType = inputArgTypes[i].GetElementType();
                     mIlGen.Emit(OpCodes.Ldarg, i + 1); //load the address of the argument
-                    mIlGen.Emit(OpCodes.Ldloc, resultLB.LocalIndex); //load the result array
+                    mIlGen.Emit(OpCodes.Ldloc, resultLb.LocalIndex); //load the result array
                     mIlGen.Emit(OpCodes.Ldc_I4, i + 1); //load the index into the result array
                     mIlGen.Emit(OpCodes.Ldelem_Ref); //load the value in the index of the array
                     if (inputType.GetTypeInfo().IsValueType)
@@ -427,7 +427,7 @@ namespace Extrasolar.Rpc.Proxying
             }
             if (returnType != typeof(void))
             {
-                mIlGen.Emit(OpCodes.Ldloc, resultLB.LocalIndex); //load the result array
+                mIlGen.Emit(OpCodes.Ldloc, resultLb.LocalIndex); //load the result array
                 mIlGen.Emit(OpCodes.Ldc_I4, 0); //load the index of the return value. Alway 0
                 mIlGen.Emit(OpCodes.Ldelem_Ref); //load the value in the index of the array
 

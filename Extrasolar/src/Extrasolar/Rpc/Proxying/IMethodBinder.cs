@@ -1,7 +1,7 @@
 ﻿namespace Extrasolar.Rpc.Proxying
 {
-    public interface IMethodBinder
+    internal interface IMethodBinder
     {
-        bool InvokeMethod(string metadata, out object result, params object[] args);
+        object[] InvokeMethod(string metadata, params object[] parameters);
     }
 }
