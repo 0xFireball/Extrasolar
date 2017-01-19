@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Extrasolar.JsonRpc
 {
-    public class JsonRpcClient
+    public class JsonRpcClient : IDisposable
     {
         [Flags]
         public enum ClientMode
@@ -98,6 +98,12 @@ namespace Extrasolar.JsonRpc
             {
                 RequestHandlers.Add(handler);
             }
+        }
+
+        public void Dispose()
+        {
+            DataWriter?.Dispose();
+            DataReader?.Dispose();
         }
 
         /// <summary>
