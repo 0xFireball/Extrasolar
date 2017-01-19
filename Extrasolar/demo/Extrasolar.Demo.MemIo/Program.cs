@@ -26,6 +26,10 @@ namespace Extrasolar.Demo.MemIo
         private static async Task BasicMemIoClient1()
         {
             var rpcClient = new JsonRpcClient(_basicIoStream, JsonRpcClient.ClientMode.TwoWay);
+            rpcClient.RequestHandler = (rq) =>
+            {
+                return new Response();
+            };
         }
     }
 }
