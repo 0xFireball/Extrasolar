@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Extrasolar.JsonRpc;
+using Extrasolar.JsonRpc.Types;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -7,24 +9,23 @@ namespace Extrasolar.Demo.MemIo
     public class Program
     {
         private static MemoryStream _basicIoStream = new MemoryStream();
-        private static StreamWriter _basicIoWriter = new StreamWriter(_basicIoStream);
-        private static StreamReader _basicIoReader = new StreamReader(_basicIoStream);
 
-        public static void Main(string[] args)
+        public static void Main()
         {
             // Test basic MemIO JSON RPC
             Task.Factory.StartNew(BasicMemIoClient1);
             Task.Factory.StartNew(BasicMemIoClient2);
         }
 
-        private static void BasicMemIoClient2()
+        private static async Task BasicMemIoClient2()
         {
-            var rpcClient = new JsonRpcClient();
+            var rpcClient = new JsonRpcClient(_basicIoStream, JsonRpcClient.ClientMode.TwoWay);
+            await rpcClient.SendRequest(new Request("ping", null, 0));
         }
 
-        private static void BasicMemIoClient1()
+        private static async Task BasicMemIoClient1()
         {
-            throw new NotImplementedException();
+            var rpcClient = new JsonRpcClient(_basicIoStream, JsonRpcClient.ClientMode.TwoWay);
         }
     }
 }

@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Extrasolar.JsonRpc
@@ -12,15 +13,17 @@ namespace Extrasolar.JsonRpc
         public enum ClientMode
         {
             Request,
-            Response
+            Response,
+            TwoWay = Request | Response
         }
 
         public Stream TransportStream { get; set; }
         public StreamWriter DataWriter { get; private set; }
         public StreamReader DataReader { get; private set; }
-
         public ClientMode Mode { get; }
         public bool Listening => Mode.HasFlag(ClientMode.Response);
+
+        private SemaphoreSlim _transportLock = new SemaphoreSlim(1, 1);
 
         public JsonRpcClient(Stream transportStream, ClientMode clientMode = ClientMode.Request | ClientMode.Response)
         {
@@ -55,8 +58,10 @@ namespace Extrasolar.JsonRpc
         {
             RequestReceived?.Invoke(this, request);
             var response = RequestHandler?.Invoke(request);
+            await _transportLock.WaitAsync();
             await DataWriter.WriteAsync(response.ToString());
             await DataWriter.FlushAsync();
+            _transportLock.Release();
         }
 
         /// <summary>

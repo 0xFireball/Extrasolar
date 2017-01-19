@@ -5,6 +5,13 @@ namespace Extrasolar.JsonRpc.Types
 {
     public class Request
     {
+        public Request(string method, JToken parameters, int id)
+        {
+            Method = method;
+            Parameters = parameters;
+            Id = id;
+        }
+
         /// <summary>
         /// JSON-RPC protocol version
         /// </summary>
