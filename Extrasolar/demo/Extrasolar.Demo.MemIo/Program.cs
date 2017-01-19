@@ -1,7 +1,6 @@
 ﻿using Extrasolar.JsonRpc;
 using Extrasolar.JsonRpc.Types;
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -40,6 +39,7 @@ namespace Extrasolar.Demo.MemIo
                 return null;
             });
             _ioClientsReady.SignalAndWait();
+            await Task.Delay(0);
         }
     }
 }

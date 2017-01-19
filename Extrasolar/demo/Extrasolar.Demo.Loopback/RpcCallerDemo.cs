@@ -19,14 +19,15 @@ namespace Extrasolar.Demo.Loopback
 
         private async Task RunAsync()
         {
-            var caller = new RpcCaller<IHelloServer>(
+            var caller = new RpcCaller<IHelloService>(
                 new NetworkRpcClient(new TcpTransportLayer(_clientSock),
                 JsonRpc.JsonRpcClient.ClientMode.Request
             ));
             //var result = await caller.CallByNameAsync<string>(nameof(IHelloServer.SayHello));
             var client = caller.CreateClient();
-            var result = (string)client.SayHello();
+            var result = client.SayHello();
             Console.WriteLine("Sent command from client.");
+            await Task.Delay(0);
         }
     }
 }

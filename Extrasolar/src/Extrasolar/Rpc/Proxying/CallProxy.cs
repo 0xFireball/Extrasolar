@@ -15,6 +15,13 @@ namespace Extrasolar.Rpc.Proxying
             _proxiedObject = target;
         }
 
+        /// <summary>
+        /// Delete this.
+        /// </summary>
+        /// <param name="binder"></param>
+        /// <param name="args"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
         {
             try
@@ -24,9 +31,9 @@ namespace Extrasolar.Rpc.Proxying
                 result = _remoteCaller.CallByNameAsync(binder.Name, args).GetAwaiter().GetResult();
                 return true;
 
-                // Forward call to proxied object
-                result = _proxiedObject.GetType().GetTypeInfo().GetMethod(binder.Name).Invoke(_proxiedObject, args);
-                return true;
+                //// Forward call to proxied object
+                //result = _proxiedObject.GetType().GetTypeInfo().GetMethod(binder.Name).Invoke(_proxiedObject, args);
+                //return true;
             }
             catch
             {
@@ -37,7 +44,7 @@ namespace Extrasolar.Rpc.Proxying
 
         public static TInterface CreateEmpty(RpcCaller<TInterface> caller)
         {
-            var binder = new CallProxyBinder<TInterface>();
+            var binder = new CallProxyBinder<TInterface>(caller);
             var emptyTarget = ProxyGenerator.BuildEmpty<TInterface>(binder);
             return emptyTarget;
         }

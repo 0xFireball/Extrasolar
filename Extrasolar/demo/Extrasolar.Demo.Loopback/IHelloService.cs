@@ -1,6 +1,6 @@
 ﻿namespace Extrasolar.Demo.Loopback
 {
-    public interface IHelloServer
+    public interface IHelloService
     {
         string SayHello();
     }
