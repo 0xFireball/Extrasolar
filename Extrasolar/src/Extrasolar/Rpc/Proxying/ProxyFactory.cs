@@ -21,7 +21,7 @@ namespace Extrasolar.Rpc.Proxying
             Type interfaceType = typeof(TInterface);
 
             // derive unique key for this dynamic assembly by interface, channel and ctor type names
-            var proxyName = interfaceType.FullName + parentType?.FullName + Guid.NewGuid().ToString("N");
+            var proxyName = interfaceType.FullName + parentType?.FullName + $"_{Guid.NewGuid().ToString("N")}";
 
             // get pooled proxy builder
             ProxyBuilder proxyBuilder = null;
@@ -122,9 +122,7 @@ namespace Extrasolar.Rpc.Proxying
             typeBuilder.AddInterfaceImplementation(interfaceType);
 
             // construct the constructor
-            //Type[] ctorArgTypes = { typeof(Type), ctorArgType };
-            Type[] ctorArgTypes = { typeof(Type) };
-            // CreateParameterizedConstructor(parentType, typeBuilder, ctorArgTypes);
+            // TODO
 
             // construct the type maps
             var ldindOpCodeTypeMap = new Dictionary<Type, OpCode>();
@@ -276,6 +274,20 @@ namespace Extrasolar.Rpc.Proxying
             ctorIL.Emit(OpCodes.Ldarg_2); // load "endpoint"
             ctorIL.Emit(OpCodes.Call, baseCtor); // call "base(...)"
             ctorIL.Emit(OpCodes.Ret);
+        }
+
+        public static MethodBuilder BindMethod(Type parentType, MethodInfo methodInfo, TypeBuilder typeBuilder, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
+        {
+            var paramInfos = methodInfo.GetParameters();
+            int nofParams = paramInfos.Length;
+            Type[] parameterTypes = new Type[nofParams];
+            for (int i = 0; i < nofParams; i++) parameterTypes[i] = paramInfos[i].ParameterType;
+            Type returnType = methodInfo.ReturnType;
+            var methodBuilder = typeBuilder.DefineMethod(methodInfo.Name, MethodAttributes.Public | MethodAttributes.Virtual, returnType, parameterTypes);
+
+            var mIL = methodBuilder.GetILGenerator();
+            GenerateILCodeForMethod(parentType, methodInfo, mIL, parameterTypes, methodBuilder.ReturnType, ldindOpCodeTypeMap, stindOpCodeTypeMap);
+            return methodBuilder;
         }
 
         private static MethodBuilder ConstructMethod(Type channelType, MethodInfo methodInfo, TypeBuilder typeBuilder, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
