@@ -16,7 +16,7 @@ namespace Extrasolar.Rpc.Proxying
         // pooled dictionary achieves same or better performance as ThreadStatic without creating as many builders under average load
         private static PooledDictionary<string, ProxyBuilder> _proxies = new PooledDictionary<string, ProxyBuilder>();
 
-        public static TInterface CreateEmptyProxy<TInterface>(Type parentType = null) where TInterface : class
+        public static TInterface CreateEmptyProxy<TInterface>(IMethodBinder methodBinder, Type parentType = null) where TInterface : class
         {
             Type interfaceType = typeof(TInterface);
 
@@ -28,7 +28,7 @@ namespace Extrasolar.Rpc.Proxying
             TInterface proxy = null;
             try
             {
-                proxyBuilder = _proxies.Request(proxyName, () => CreateSimpleProxyBuilder(proxyName, interfaceType, parentType));
+                proxyBuilder = _proxies.Request(proxyName, () => CreateSimpleProxyBuilder(proxyName, interfaceType, methodBinder, parentType));
                 proxy = CreateEmptyProxy<TInterface>(proxyBuilder);
             }
             finally
@@ -94,7 +94,7 @@ namespace Extrasolar.Rpc.Proxying
             return null;
         }
 
-        private static ProxyBuilder CreateSimpleProxyBuilder(string proxyName, Type interfaceType, Type parentType = null)
+        private static ProxyBuilder CreateSimpleProxyBuilder(string proxyName, Type interfaceType, IMethodBinder methodBinder, Type parentType = null)
         {
             // create a new assembly for the proxy
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(PROXY_ASSEMBLY), AssemblyBuilderAccess.Run);
@@ -157,6 +157,7 @@ namespace Extrasolar.Rpc.Proxying
             var methods = GetAllMethods(allInterfaces);
             foreach (MethodInfo methodInfo in methods)
             {
+                BindMethod(methodBinder, methodInfo, typeBuilder, ldindOpCodeTypeMap, stindOpCodeTypeMap);
                 var methodBuilder = ConstructMethod(parentType, methodInfo, typeBuilder, ldindOpCodeTypeMap, stindOpCodeTypeMap);
                 typeBuilder.DefineMethodOverride(methodBuilder, methodInfo);
             }
@@ -172,6 +173,21 @@ namespace Extrasolar.Rpc.Proxying
                 TypeBuilder = typeBuilder
             };
             return result;
+        }
+
+        public static MethodBuilder BindMethod(IMethodBinder binder, MethodInfo methodInfo, TypeBuilder typeBuilder, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
+        {
+            var paramInfos = methodInfo.GetParameters();
+            int nofParams = paramInfos.Length;
+            Type[] parameterTypes = new Type[nofParams];
+            for (int i = 0; i < nofParams; i++) parameterTypes[i] = paramInfos[i].ParameterType;
+            Type returnType = methodInfo.ReturnType;
+            var methodBuilder = typeBuilder.DefineMethod(methodInfo.Name, MethodAttributes.Public | MethodAttributes.Virtual, returnType, parameterTypes);
+
+            var mIL = methodBuilder.GetILGenerator();
+            // TODO: Inject call to binder
+
+            return methodBuilder;
         }
 
         private static ProxyBuilder CreateProxyBuilder(string proxyName, Type interfaceType, Type channelType, Type ctorArgType)
@@ -274,20 +290,6 @@ namespace Extrasolar.Rpc.Proxying
             ctorIL.Emit(OpCodes.Ldarg_2); // load "endpoint"
             ctorIL.Emit(OpCodes.Call, baseCtor); // call "base(...)"
             ctorIL.Emit(OpCodes.Ret);
-        }
-
-        public static MethodBuilder BindMethod(Type parentType, MethodInfo methodInfo, TypeBuilder typeBuilder, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
-        {
-            var paramInfos = methodInfo.GetParameters();
-            int nofParams = paramInfos.Length;
-            Type[] parameterTypes = new Type[nofParams];
-            for (int i = 0; i < nofParams; i++) parameterTypes[i] = paramInfos[i].ParameterType;
-            Type returnType = methodInfo.ReturnType;
-            var methodBuilder = typeBuilder.DefineMethod(methodInfo.Name, MethodAttributes.Public | MethodAttributes.Virtual, returnType, parameterTypes);
-
-            var mIL = methodBuilder.GetILGenerator();
-            GenerateILCodeForMethod(parentType, methodInfo, mIL, parameterTypes, methodBuilder.ReturnType, ldindOpCodeTypeMap, stindOpCodeTypeMap);
-            return methodBuilder;
         }
 
         private static MethodBuilder ConstructMethod(Type channelType, MethodInfo methodInfo, TypeBuilder typeBuilder, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
