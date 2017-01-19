@@ -16,12 +16,12 @@ namespace Extrasolar.Rpc.Proxying
         // pooled dictionary achieves same or better performance as ThreadStatic without creating as many builders under average load
         private static PooledDictionary<string, ProxyBuilder> _proxies = new PooledDictionary<string, ProxyBuilder>();
 
-        public static TInterface CreateEmptyProxy<TInterface>(Type parentType) where TInterface : class
+        public static TInterface CreateEmptyProxy<TInterface>(Type parentType = null) where TInterface : class
         {
             Type interfaceType = typeof(TInterface);
 
             // derive unique key for this dynamic assembly by interface, channel and ctor type names
-            var proxyName = interfaceType.FullName + parentType.FullName;
+            var proxyName = interfaceType.FullName + parentType?.FullName + Guid.NewGuid().ToString("N");
 
             // get pooled proxy builder
             ProxyBuilder proxyBuilder = null;
@@ -94,7 +94,7 @@ namespace Extrasolar.Rpc.Proxying
             return null;
         }
 
-        private static ProxyBuilder CreateSimpleProxyBuilder(string proxyName, Type interfaceType, Type parentType)
+        private static ProxyBuilder CreateSimpleProxyBuilder(string proxyName, Type interfaceType, Type parentType = null)
         {
             // create a new assembly for the proxy
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(PROXY_ASSEMBLY), AssemblyBuilderAccess.Run);
@@ -106,7 +106,15 @@ namespace Extrasolar.Rpc.Proxying
             TypeAttributes typeAttributes = TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed;
 
             // Construct the type builder
-            var typeBuilder = moduleBuilder.DefineType(interfaceType.Name + PROXY, typeAttributes, parentType);
+            TypeBuilder typeBuilder;
+            if (parentType != null)
+            {
+                typeBuilder = moduleBuilder.DefineType(interfaceType.Name + PROXY, typeAttributes, parentType);
+            }
+            else
+            {
+                typeBuilder = moduleBuilder.DefineType(interfaceType.Name + PROXY, typeAttributes);
+            }
             var allInterfaces = new List<Type>(interfaceType.GetInterfaces());
             allInterfaces.Add(interfaceType);
 
@@ -116,7 +124,7 @@ namespace Extrasolar.Rpc.Proxying
             // construct the constructor
             //Type[] ctorArgTypes = { typeof(Type), ctorArgType };
             Type[] ctorArgTypes = { typeof(Type) };
-            CreateConstructor(parentType, typeBuilder, ctorArgTypes);
+            // CreateParameterizedConstructor(parentType, typeBuilder, ctorArgTypes);
 
             // construct the type maps
             var ldindOpCodeTypeMap = new Dictionary<Type, OpCode>();
@@ -146,6 +154,7 @@ namespace Extrasolar.Rpc.Proxying
             stindOpCodeTypeMap.Add(typeof(Double), OpCodes.Stind_R8);
             stindOpCodeTypeMap.Add(typeof(Single), OpCodes.Stind_R4);
 
+            // TODO: Allow passing in a binder to handle method calls
             // construct the method builders from the method infos defined in the interface
             var methods = GetAllMethods(allInterfaces);
             foreach (MethodInfo methodInfo in methods)
@@ -197,7 +206,7 @@ namespace Extrasolar.Rpc.Proxying
 
             // construct the constructor
             Type[] ctorArgTypes = { typeof(Type), ctorArgType };
-            CreateConstructor(channelType, typeBuilder, ctorArgTypes);
+            CreateParameterizedConstructor(channelType, typeBuilder, ctorArgTypes);
 
             // construct the type maps
             var ldindOpCodeTypeMap = new Dictionary<Type, OpCode>();
@@ -256,16 +265,16 @@ namespace Extrasolar.Rpc.Proxying
             return methods;
         }
 
-        private static void CreateConstructor(Type channelType, TypeBuilder typeBuilder, Type[] ctorArgTypes)
+        private static void CreateParameterizedConstructor(Type channelType, TypeBuilder typeBuilder, Type[] ctorArgTypes)
         {
             var ctor = typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.HasThis, ctorArgTypes);
             var baseCtor = channelType.GetConstructor(ctorArgTypes);
 
             var ctorIL = ctor.GetILGenerator();
-            ctorIL.Emit(OpCodes.Ldarg_0); //load "this"
-            ctorIL.Emit(OpCodes.Ldarg_1); //load serviceType
-            ctorIL.Emit(OpCodes.Ldarg_2); //load "endpoint"
-            ctorIL.Emit(OpCodes.Call, baseCtor); //call "base(...)"
+            ctorIL.Emit(OpCodes.Ldarg_0); // load "this"
+            ctorIL.Emit(OpCodes.Ldarg_1); // load serviceType
+            ctorIL.Emit(OpCodes.Ldarg_2); // load "endpoint"
+            ctorIL.Emit(OpCodes.Call, baseCtor); // call "base(...)"
             ctorIL.Emit(OpCodes.Ret);
         }
 
