@@ -15,18 +15,17 @@ namespace Extrasolar.JsonRpc
         {
             Request = 1 << 0,
             Response = 1 << 1,
-            TwoWay = Request | Response
         }
 
         public Stream TransportStream { get; set; }
         protected StreamWriter DataWriter { get; private set; }
         protected StreamReader DataReader { get; private set; }
         public ClientMode Mode { get; }
-        public bool Listening => Mode.HasFlag(ClientMode.Response);
+        public bool Listening => true;
 
         private SemaphoreSlim _transportLock = new SemaphoreSlim(1, 1);
 
-        public JsonRpcClient(Stream transportStream, ClientMode clientMode = ClientMode.Request | ClientMode.Response)
+        public JsonRpcClient(Stream transportStream, ClientMode clientMode)
         {
             TransportStream = transportStream;
             Mode = clientMode;
@@ -55,14 +54,23 @@ namespace Extrasolar.JsonRpc
         {
             while (Listening)
             {
-                var requestJson = await DataReader.ReadLineAsync();
-                if (requestJson != null)
+                var dataJson = await DataReader.ReadLineAsync();
+                if (dataJson != null)
                 {
                     try
                     {
-                        var request = JsonConvert.DeserializeObject<Request>(requestJson);
-                        // Spawn new handler
-                        var handlerTask = Task.Factory.StartNew(async () => await HandleRequest(request));
+                        if (Mode == ClientMode.Request)
+                        {
+                            var response = JsonConvert.DeserializeObject<Response>(dataJson);
+                            // Spawn new handler
+                            var handlerTask = Task.Factory.StartNew(async () => await HandleReceivedResponse(response));
+                        }
+                        if (Mode == ClientMode.Response)
+                        {
+                            var request = JsonConvert.DeserializeObject<Request>(dataJson);
+                            // Spawn new handler
+                            var handlerTask = Task.Factory.StartNew(async () => await HandleReceivedRequest(request));
+                        }
                     }
                     catch (JsonSerializationException)
                     {
@@ -72,7 +80,11 @@ namespace Extrasolar.JsonRpc
             }
         }
 
-        private async Task HandleRequest(Request request)
+        private async Task HandleReceivedResponse(Response response)
+        {
+        }
+
+        private async Task HandleReceivedRequest(Request request)
         {
             RequestReceived?.Invoke(this, request);
             Response response = null;
