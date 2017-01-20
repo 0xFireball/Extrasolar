@@ -9,7 +9,7 @@ using System.Reflection;
 
 namespace Extrasolar.Rpc
 {
-    public class RpcService<TInterface> where TInterface : class
+    public class RpcService<TInterface> : IDisposable where TInterface : class
     {
         public NetworkRpcEndpoint RpcClient { get; set; }
         public TInterface ServiceImplementation { get; private set; }
@@ -42,7 +42,8 @@ namespace Extrasolar.Rpc
                     if (paramsData is JArray)
                     {
                         // TODO: Properly deserialize values
-                        var paramsArray = (paramsData as JArray).ToArray().Select(x => (x as JValue).Value);
+                        //var paramsArray = (paramsData as JArray).Children().Select(x => x.ToObject<object>());
+                        var paramsArray = JsonConvert.DeserializeObject<object[]>((string)rawParams);
                         foreach (var parameter in paramsArray)
                         {
                             callArgs.Add(parameter);
@@ -68,9 +69,44 @@ namespace Extrasolar.Rpc
             }
             if (targetMethodCandidates.Count() > 1)
             {
-                // Attempt to resolve by parameter count
+                // Attempt to resolve by checking parameter count and types
                 var paramCount = callArgs.Count;
                 targetMethodCandidates = targetMethodCandidates.Where(x => x.GetParameters().Count() == paramCount);
+                targetMethodCandidates = targetMethodCandidates.Where(method =>
+                {
+                    var prmTypes = method.GetParameters().Select(x => x.ParameterType).ToArray();
+                    var tmpCallArgs = new List<object>(callArgs);
+                    for (int i = 0; i < prmTypes.Length; i++)
+                    {
+                        var paramType = prmTypes[i];
+                        var callParam = tmpCallArgs[i];
+                        if (!paramType.IsInstanceOfType(callParam))
+                        {
+                            // If the call parameter isn't an instance, cast
+                            var originalCallArgType = callParam.GetType();
+                            // Only convert long to int for calls
+                            //tmpCallArgs[i] = Convert.ChangeType(callParam, paramType);
+                            if (paramType == typeof(int) && callParam is long)
+                            {
+                                tmpCallArgs[i] = Convert.ChangeType(callParam, typeof(int));
+                            }
+                            // If that succeeded, types are convertible.
+                            // Now make sure it's assignable
+                            if (!paramType.IsAssignableFrom(tmpCallArgs[i].GetType()))
+                            {
+                                // Not assignable
+                                return false;
+                            }
+                            // Finally, use a type constraint
+                            if (paramType.FullName != tmpCallArgs[i].GetType().FullName)
+                            {
+                                // Type does not exactly match
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                });
                 if (!targetMethodCandidates.Any())
                 {
                     // No implementation found
@@ -95,8 +131,15 @@ namespace Extrasolar.Rpc
                 var callParam = callArgs[i];
                 if (!paramType.IsInstanceOfType(callParam))
                 {
-                    // If the call parameter isn't an instance, cast
-                    callArgs[i] = Convert.ChangeType(callParam, paramType);
+                    // If the call parameter doesn't match, cast
+                    if (callParam is JObject)
+                    {
+                        callArgs[i] = ((JObject)callParam).ToObject(paramType);
+                    }
+                    else
+                    {
+                        callArgs[i] = Convert.ChangeType(callParam, paramType);
+                    }
                 }
             }
             try
@@ -119,6 +162,11 @@ namespace Extrasolar.Rpc
         {
             ServiceImplementation = implementation;
             _cachedMethodInfo = ServiceImplementation.GetType().GetTypeInfo().GetMethods();
+        }
+
+        public void Dispose()
+        {
+            RpcClient.Dispose();
         }
     }
 }
