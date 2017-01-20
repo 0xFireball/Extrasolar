@@ -1,5 +1,6 @@
 ﻿using Extrasolar.IO;
 using Extrasolar.JsonRpc.Types;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -31,6 +32,27 @@ namespace Extrasolar.Rpc
             if (rawArgs is JArray)
             {
                 callArgs.AddRange((rawArgs as JArray).Children().Select(x => x.ToObject<object>()));
+            }
+            else if (rawArgs is JValue)
+            {
+                var rawParams = (rawArgs as JValue).Value;
+                if (rawParams is string)
+                {
+                    var paramsData = JsonConvert.DeserializeObject<object>((string)rawParams);
+                    if (paramsData is JArray)
+                    {
+                        // TODO: Properly deserialize values
+                        var paramsArray = (paramsData as JArray).ToArray().Select(x => (x as JValue).Value);
+                        foreach (var parameter in paramsArray)
+                        {
+                            callArgs.Add(parameter);
+                        }
+                    }
+                    else
+                    {
+                        callArgs.Add(paramsData);
+                    }
+                }
             }
             else
             {
@@ -67,7 +89,7 @@ namespace Extrasolar.Rpc
             try
             {
                 var result = targetMethodCandidates.First().Invoke(ServiceImplementation, callArgs.ToArray());
-                var resultJObject = JObject.FromObject(result);
+                var resultJObject = JToken.FromObject(result);
                 return new ResultResponse(request, resultJObject);
             }
             catch (Exception ex)
