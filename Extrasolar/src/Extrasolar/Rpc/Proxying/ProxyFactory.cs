@@ -171,7 +171,7 @@ namespace Extrasolar.Rpc.Proxying
             {
                 ProxyName = proxyName,
                 InterfaceType = interfaceType,
-                CtorType = null, // Shouldn't matter if we use the Empty proxy builder
+                CtorType = ctorArgType,
                 AssemblyBuilder = assemblyBuilder,
                 ModuleBuilder = moduleBuilder,
                 TypeBuilder = typeBuilder
