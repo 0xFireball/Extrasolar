@@ -34,6 +34,9 @@ based on JSON-RPC 2.0.
   - Extrasolar uses a heavily modified and adapted version of ServiceWire's object proxying
     as part of its fluent proxying API in addition to several other components originally written
     from scratch in Extrasolar
+  - Extrasolar uses a more general protocol that can run over any two-way stream system,
+    and is not limited to just TCP or pipes but also supports standard I/O and in-memory
+    streams, and any other two-way stream.
   - ServiceWire is licensed under the Apache License 2.0
 
 ## License
