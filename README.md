@@ -11,6 +11,8 @@ based on JSON-RPC 2.0.
 - Extrasolar protocol implementation
   - A protocol based on JSON-RPC 2.0
 - Fluent .NET driver for Extrasolar RPC
+  - Dynamic object proxying and method dispatching
+  - Simulates an interface instance
 
 ## Why Extrasolar?
 
@@ -23,6 +25,16 @@ based on JSON-RPC 2.0.
   send them back
   - In terms of goals, JSON-RPC is very similar to REST
 
+
+## Credits
+
+- Extrasolar's API was inspired by that of [ServiceWire](https://github.com/tylerjensen/ServiceWire)
+  - While ServiceWire aims to accomplish a similar goal of providing RPC,
+    Extrasolar's protocol is completely different and written from scratch
+  - Extrasolar uses a heavily modified and adapted version of ServiceWire's object proxying
+    as part of its fluent proxying API in addition to several other components originally written
+    from scratch in Extrasolar
+  - ServiceWire is licensed under the Apache License 2.0
 
 ## License
 

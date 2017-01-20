@@ -9,13 +9,16 @@ namespace Extrasolar.Demo.Loopback
 {
     public class RpcCallerDemo
     {
-        private static TcpClient _clientSock;
-
-        internal async Task RunAsync(TcpClient clientSock)
+        internal async Task RunServerAsync(TcpClient serverSock)
         {
-            _clientSock = clientSock;
+            
+            await Task.Delay(0);
+        }
+
+        internal async Task RunClientAsync(TcpClient clientSock)
+        {
             var caller = new RpcCaller<IHelloService>(
-                new NetworkRpcClient(new TcpTransportLayer(_clientSock),
+                new NetworkRpcClient(new TcpTransportLayer(clientSock),
                 JsonRpc.JsonRpcClient.ClientMode.Request
             ));
             //var result = await caller.CallByNameAsync<string>(nameof(IHelloServer.SayHello));
