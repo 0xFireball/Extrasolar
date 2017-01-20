@@ -39,8 +39,10 @@ namespace Extrasolar.Demo.Loopback
             //var result = await caller.CallByNameAsync<string>(nameof(IHelloServer.SayHello));
             _barrier.SignalAndWait();
             var client = caller.CreateClient();
-            var result = client.SayHello();
-            Console.WriteLine($"Sent command from client. Server responded {result}");
+            var helloResult = client.SayHello();
+            Console.WriteLine($"Sent command from client. Server responded {helloResult}");
+            Console.WriteLine($"Is the sky blue?: {client.IsSkyBlue()}");
+            Console.WriteLine($"1 + 3 is: {client.Add(1, 3)}");
             await Task.Delay(0);
         }
     }
