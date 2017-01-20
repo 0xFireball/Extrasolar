@@ -17,7 +17,7 @@ namespace Extrasolar.Rpc.Proxying
         // pooled dictionary achieves same or better performance as ThreadStatic without creating as many builders under average load
         private static PooledDictionary<string, ProxyBuilder> _proxies = new PooledDictionary<string, ProxyBuilder>();
 
-        public static TInterface CreateEmptyProxy<TInterface>(DynamicMethodBinder methodBinder, Type binderType) where TInterface : class
+        public static TInterface CreateEmptyProxy<TInterface>(DynamicMethodBinder methodBinder, Type binderType, Type ctorArgType, object ctorArg) where TInterface : class
         {
             Type interfaceType = typeof(TInterface);
 
@@ -29,8 +29,8 @@ namespace Extrasolar.Rpc.Proxying
             TInterface proxy = null;
             try
             {
-                proxyBuilder = _proxies.Request(proxyName, () => CreateSimpleProxyBuilder(proxyName, interfaceType, methodBinder, binderType));
-                proxy = CreateEmptyProxy<TInterface>(proxyBuilder);
+                proxyBuilder = _proxies.Request(proxyName, () => CreateSimpleProxyBuilder(proxyName, interfaceType, methodBinder, binderType, ctorArgType));
+                proxy = CreateEmptyProxy<TInterface>(proxyBuilder, ctorArg);
             }
             finally
             {
@@ -80,24 +80,23 @@ namespace Extrasolar.Rpc.Proxying
             return null;
         }
 
-        private static TInterface CreateEmptyProxy<TInterface>(ProxyBuilder proxyBuilder) where TInterface : class
+        private static TInterface CreateEmptyProxy<TInterface>(ProxyBuilder proxyBuilder, object ctorArgValue) where TInterface : class
         {
             //create the type and construct an instance
-            //Type[] ctorArgTypes = { typeof(Type) };
-            Type[] ctorArgTypes = Type.EmptyTypes;
+            Type[] ctorArgTypes = { proxyBuilder.CtorType };
             var tInfo = proxyBuilder.TypeBuilder.CreateTypeInfo();
             var t = tInfo.AsType();
             var constructorInfo = t.GetConstructor(ctorArgTypes);
             if (constructorInfo != null)
             {
                 //var instance = (TInterface)constructorInfo.Invoke(new object[] { typeof(TInterface) });
-                var instance = (TInterface)constructorInfo.Invoke(new object[0]);
+                var instance = (TInterface)constructorInfo.Invoke(new object[] { ctorArgValue });
                 return instance;
             }
             return null;
         }
 
-        private static ProxyBuilder CreateSimpleProxyBuilder(string proxyName, Type interfaceType, DynamicMethodBinder methodBinder, Type parentType)
+        private static ProxyBuilder CreateSimpleProxyBuilder(string proxyName, Type interfaceType, DynamicMethodBinder methodBinder, Type parentType, Type ctorArgType = null)
         {
             // create a new assembly for the proxy
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(PROXY_ASSEMBLY), AssemblyBuilderAccess.Run);
@@ -127,6 +126,8 @@ namespace Extrasolar.Rpc.Proxying
 
             // construct the constructor
             // TODO
+            Type[] ctorArgTypes = { ctorArgType };
+            CreateParameterizedConstructor(parentType, typeBuilder, ctorArgTypes);
 
             // construct the type maps
             var ldindOpCodeTypeMap = new Dictionary<Type, OpCode>();
@@ -301,8 +302,8 @@ namespace Extrasolar.Rpc.Proxying
 
             var ctorIL = ctor.GetILGenerator();
             ctorIL.Emit(OpCodes.Ldarg_0); // load "this"
-            ctorIL.Emit(OpCodes.Ldarg_1); // load serviceType
-            ctorIL.Emit(OpCodes.Ldarg_2); // load "endpoint"
+            ctorIL.Emit(OpCodes.Ldarg_1); // load type
+            //ctorIL.Emit(OpCodes.Ldarg_2); // load "endpoint"
             ctorIL.Emit(OpCodes.Call, baseCtor); // call "base(...)"
             ctorIL.Emit(OpCodes.Ret);
         }

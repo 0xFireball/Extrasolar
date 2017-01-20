@@ -8,6 +8,8 @@ namespace Extrasolar.Rpc.Proxying
     {
         private RpcCaller<TInterface> _caller;
 
+        public override object Target => _caller;
+
         public CallProxyBinder(RpcCaller<TInterface> caller)
         {
             _caller = caller;
