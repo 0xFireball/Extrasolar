@@ -4,13 +4,18 @@ using System.Linq;
 
 namespace Extrasolar.Rpc.Proxying
 {
-    public class CallProxyBinder<TInterface> : IMethodBinder where TInterface : class
+    public class CallProxyBinder<TInterface> : IMethodBinder, IDisposable where TInterface : class
     {
         private RpcCaller<TInterface> _caller;
 
         public CallProxyBinder(RpcCaller<TInterface> caller)
         {
             _caller = caller;
+        }
+
+        public void Dispose()
+        {
+            //GC.SuppressFinalize(this);
         }
 
         public object[] InvokeMethod(string metadata, params object[] parameters)
@@ -34,7 +39,9 @@ namespace Extrasolar.Rpc.Proxying
             object result = null;
             if (returnType != null)
             {
-                Console.WriteLine("Caller available: " + _caller != null);
+                Console.WriteLine($"Caller available: {_caller != null}");
+                Console.WriteLine($"Return type available: {returnType != null}");
+                Console.WriteLine($"Parameters available: {parameters != null}");
                 result = _caller.CallByName(methodName, returnType, parameters);
                 // Return result
                 return new[] { result };
