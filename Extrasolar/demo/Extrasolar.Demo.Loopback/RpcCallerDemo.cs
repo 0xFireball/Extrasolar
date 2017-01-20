@@ -12,8 +12,7 @@ namespace Extrasolar.Demo.Loopback
         internal async Task RunServerAsync(TcpClient serverSock)
         {
             var service = new RpcService<IHelloService>(
-                new NetworkRpcEndpoint(new TcpTransportLayer(serverSock),
-                JsonRpc.JsonRpcEndpoint.EndpointMode.Server
+                new NetworkRpcService(new TcpTransportLayer(serverSock)
             ));
             await Task.Delay(0);
         }
@@ -21,8 +20,7 @@ namespace Extrasolar.Demo.Loopback
         internal async Task RunClientAsync(TcpClient clientSock)
         {
             var caller = new RpcCaller<IHelloService>(
-                new NetworkRpcEndpoint(new TcpTransportLayer(clientSock),
-                JsonRpc.JsonRpcEndpoint.EndpointMode.Client
+                new NetworkRpcClient(new TcpTransportLayer(clientSock)
             ));
             //var result = await caller.CallByNameAsync<string>(nameof(IHelloServer.SayHello));
             var client = caller.CreateClient();

@@ -6,8 +6,6 @@ namespace Extrasolar.Rpc
     {
         public NetworkRpcEndpoint RpcClient { get; set; }
 
-        private int _requestCount;
-
         public RpcService(NetworkRpcService netRpcClient)
         {
             RpcClient = netRpcClient;
