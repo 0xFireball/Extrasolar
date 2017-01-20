@@ -86,9 +86,22 @@ namespace Extrasolar.Rpc
                     }
                 }
             }
+            var selectedMethod = targetMethodCandidates.First();
+            // Normalize arguments
+            var parameterTypes = selectedMethod.GetParameters().Select(x => x.ParameterType).ToArray();
+            for (int i = 0; i < parameterTypes.Length; i++)
+            {
+                var paramType = parameterTypes[i];
+                var callParam = callArgs[i];
+                if (!paramType.IsInstanceOfType(callParam))
+                {
+                    // If the call parameter isn't an instance, cast
+                    callArgs[i] = Convert.ChangeType(callParam, paramType);
+                }
+            }
             try
             {
-                var result = targetMethodCandidates.First().Invoke(ServiceImplementation, callArgs.ToArray());
+                var result = selectedMethod.Invoke(ServiceImplementation, callArgs.ToArray());
                 var resultJObject = JToken.FromObject(result);
                 return new ResultResponse(request, resultJObject);
             }
