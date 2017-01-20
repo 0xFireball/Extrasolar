@@ -90,6 +90,12 @@ namespace Extrasolar.Rpc
                                 // Not assignable
                                 return false;
                             }
+                            // Finally, use a type constraint
+                            if (paramType.FullName != tmpCallArgs[i].GetType().FullName)
+                            {
+                                // Type does not exactly match
+                                return false;
+                            }
                         }
                     }
                     return true;
