@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Extrasolar.Rpc.Proxying
 {
@@ -30,7 +29,13 @@ namespace Extrasolar.Rpc.Proxying
             List<Type> parameterTypes = new List<Type>();
             if (metadataComponents.Length > 2)
             {
-                parameterTypes.AddRange(metadataComponents[1].Split('|').Select(typeFullName => Type.GetType(typeFullName)));
+                var parameterTypeNames = metadataComponents[2].Split('|');
+                foreach (var typeName in parameterTypeNames)
+                {
+                    // Resolve type
+                    var rType = Type.GetType(typeName);
+                    parameterTypes.Add(rType);
+                }
             }
             // Invoke method based on arguments, it will be deserialized according to return type
             object result = null;
