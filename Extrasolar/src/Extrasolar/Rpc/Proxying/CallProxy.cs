@@ -1,6 +1,4 @@
-﻿using System;
-using System.Dynamic;
-using System.Reflection;
+﻿using System.Dynamic;
 
 namespace Extrasolar.Rpc.Proxying
 {
@@ -45,8 +43,8 @@ namespace Extrasolar.Rpc.Proxying
         public static TInterface CreateEmpty(RpcCaller<TInterface> caller)
         {
             var binder = new CallProxyBinder<TInterface>(caller);
-            var emptyTarget = ProxyGenerator.BuildEmpty<TInterface>(binder);
-            return emptyTarget;
+            var dynamicCallProxy = ProxyGenerator.BuildEmpty<TInterface>(binder);
+            return dynamicCallProxy;
         }
     }
 }

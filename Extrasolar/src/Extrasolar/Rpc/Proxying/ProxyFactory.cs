@@ -21,7 +21,7 @@ namespace Extrasolar.Rpc.Proxying
             Type interfaceType = typeof(TInterface);
 
             // derive unique key for this dynamic assembly by interface, channel and ctor type names
-            var proxyName = interfaceType.FullName + parentType?.FullName + $"_{Guid.NewGuid().ToString("N")}";
+            var proxyName = $"{PROXY}_" + interfaceType.FullName + parentType?.FullName + $"_{Guid.NewGuid().ToString("N")}";
 
             // get pooled proxy builder
             ProxyBuilder proxyBuilder = null;
