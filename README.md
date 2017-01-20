@@ -1,7 +1,9 @@
 
 # Extrasolar
 
-Framework for easy RPC (Remote Process Communication)
+Framework for easy RPC (Remote Process Communication)!
+- Supports .NET Standard 1.6!
+
 
 [![Build Status](https://travis-ci.org/0xFireball/Extrasolar.svg?branch=master)](https://travis-ci.org/0xFireball/Extrasolar)
 
