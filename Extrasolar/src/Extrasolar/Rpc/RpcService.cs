@@ -68,9 +68,32 @@ namespace Extrasolar.Rpc
             }
             if (targetMethodCandidates.Count() > 1)
             {
-                // Attempt to resolve by parameter count
+                // Attempt to resolve by checking parameter count and types
                 var paramCount = callArgs.Count;
                 targetMethodCandidates = targetMethodCandidates.Where(x => x.GetParameters().Count() == paramCount);
+                targetMethodCandidates = targetMethodCandidates.Where(method =>
+                {
+                    var prmTypes = method.GetParameters().Select(x => x.ParameterType).ToArray();
+                    var tmpCallArgs = new List<object>(callArgs);
+                    for (int i = 0; i < prmTypes.Length; i++)
+                    {
+                        var paramType = prmTypes[i];
+                        var callParam = tmpCallArgs[i];
+                        if (!paramType.IsInstanceOfType(callParam))
+                        {
+                            // If the call parameter isn't an instance, cast
+                            tmpCallArgs[i] = Convert.ChangeType(callParam, paramType);
+                            // If that succeeded, types are convertible.
+                            // Now make sure it's assignable
+                            if (!paramType.IsAssignableFrom(tmpCallArgs[i].GetType()))
+                            {
+                                // Not assignable
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                });
                 if (!targetMethodCandidates.Any())
                 {
                     // No implementation found
