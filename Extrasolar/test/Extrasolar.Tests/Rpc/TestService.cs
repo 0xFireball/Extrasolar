@@ -34,5 +34,10 @@ namespace Extrasolar.Tests.Rpc
         {
             return a1.Concat(a2).ToArray();
         }
+
+        public object EchoObject(object obj)
+        {
+            return obj;
+        }
     }
 }

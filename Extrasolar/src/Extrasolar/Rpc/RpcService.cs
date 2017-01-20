@@ -136,6 +136,11 @@ namespace Extrasolar.Rpc
                     {
                         callArgs[i] = ((JToken)callParam).ToObject(paramType);
                     }
+                    else if (callParam is JValue)
+                    {
+                        var valueObject = ((JValue)callParam).Value;
+                        callArgs[i] = Convert.ChangeType(valueObject, paramType);
+                    }
                     else
                     {
                         callArgs[i] = Convert.ChangeType(callParam, paramType);

@@ -11,5 +11,6 @@ namespace Extrasolar.Tests.Rpc
         bool Compare(TastyCookie c1, TastyCookie c2);
         int ArraySum(int[] vals);
         int[] CombineArrays(int[] a1, int[] a2);
+        object EchoObject(object obj);
     }
 }

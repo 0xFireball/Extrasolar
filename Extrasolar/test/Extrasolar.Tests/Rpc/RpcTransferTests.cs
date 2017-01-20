@@ -57,5 +57,13 @@ namespace Extrasolar.Tests.Rpc
             var combined = a1.Concat(a2);
             Assert.Equal(_fixture.Client.CombineArrays(a1, a2), combined);
         }
+
+        [Fact]
+        public void CanTransferObjects()
+        {
+            var blob = new { Foo = "Bar" };
+            dynamic returnBlob = _fixture.Client.EchoObject(blob);
+            Assert.Equal(returnBlob.Foo, blob.Foo);
+        }
     }
 }
