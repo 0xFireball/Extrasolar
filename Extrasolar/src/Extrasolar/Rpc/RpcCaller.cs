@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Extrasolar.Rpc
 {
-    public class RpcCaller<TInterface> where TInterface : class
+    public class RpcCaller<TInterface> : IDisposable where TInterface : class
     {
         public NetworkRpcEndpoint RpcClient { get; set; }
 
@@ -48,6 +48,11 @@ namespace Extrasolar.Rpc
             var response = await CallByNameAsync(methodName, args);
             var result = response.Result.ToObject<TResult>();
             return result;
+        }
+
+        public void Dispose()
+        {
+            RpcClient.Dispose();
         }
     }
 }

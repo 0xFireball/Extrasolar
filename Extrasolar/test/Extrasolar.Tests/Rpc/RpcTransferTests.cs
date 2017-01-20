@@ -1,32 +1,20 @@
-﻿using System;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading.Tasks;
-using Xunit;
+﻿using Xunit;
 
 namespace Extrasolar.Tests.Rpc
 {
-    public class RpcTransferTests
+    public class RpcTransferTests : IClassFixture<TestClientFixture>
     {
-        [Fact]
-        public async Task CanCallParameterless()
-        {
-            var sockets = await CreateSockets();
-            var clientSock = sockets.Item1;
-            var serverSock = sockets.Item2;
+        private TestClientFixture _fixture;
 
+        public RpcTransferTests()
+        {
+            _fixture = new TestClientFixture();
         }
 
-        public async Task<Tuple<TcpClient, TcpClient>> CreateSockets()
+        [Fact]
+        public void CanCallParameterless()
         {
-            int testPort = 12983;
-            TcpListener listener = new TcpListener(IPAddress.Loopback, testPort);
-            listener.Start();
-            var clientSock = new TcpClient();
-            var serverSockTask = listener.AcceptTcpClientAsync();
-            await clientSock.ConnectAsync(IPAddress.Loopback, testPort);
-            var serverSock = await serverSockTask;
-            return new Tuple<TcpClient, TcpClient>(clientSock, serverSock);
+            Assert.Equal(_fixture.Client.GetBasicString(), _fixture.Client.GetBasicStringResult);
         }
     }
 }

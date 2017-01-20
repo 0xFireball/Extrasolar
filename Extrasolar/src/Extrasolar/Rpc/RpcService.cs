@@ -9,7 +9,7 @@ using System.Reflection;
 
 namespace Extrasolar.Rpc
 {
-    public class RpcService<TInterface> where TInterface : class
+    public class RpcService<TInterface> : IDisposable where TInterface : class
     {
         public NetworkRpcEndpoint RpcClient { get; set; }
         public TInterface ServiceImplementation { get; private set; }
@@ -162,6 +162,11 @@ namespace Extrasolar.Rpc
         {
             ServiceImplementation = implementation;
             _cachedMethodInfo = ServiceImplementation.GetType().GetTypeInfo().GetMethods();
+        }
+
+        public void Dispose()
+        {
+            RpcClient.Dispose();
         }
     }
 }
