@@ -33,7 +33,6 @@ This code will start a RPC server on TCP for a custom interface `IHelloService` 
 ```csharp
 TcpListener listener = new TcpListener(IPAddress.Loopback, Program.lbPort);
 listener.Start();
-_barrier.SignalAndWait();
 var srvSock = await listener.AcceptTcpClientAsync();
 var service = new RpcService<IHelloService>(
     new NetworkRpcService(new TcpTransportLayer(srvSock)
