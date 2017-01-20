@@ -18,6 +18,7 @@ namespace Extrasolar.Demo.Loopback
                 new NetworkRpcService(new TcpTransportLayer(serverSock)
             ));
             service.Export(new HelloService());
+            Console.WriteLine($"{nameof(HelloService)} ready.");
             await Task.Delay(0);
             _barrier.SignalAndWait();
         }
