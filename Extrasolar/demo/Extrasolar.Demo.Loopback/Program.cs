@@ -23,7 +23,8 @@ namespace Extrasolar.Demo.Loopback
             // Test basic MemIO JSON RPC
             var server = Task.Factory.StartNew(NetServerThread);
             var client = Task.Factory.StartNew(NetClientThread);
-            Task.WaitAll(server, client);
+            // Wait for first demo
+            client.GetAwaiter().GetResult().GetAwaiter().GetResult();
             // Test RPCCaller
             var rpcCallerDemo = new RpcCallerDemo();
             rpcCallerDemo.RunAsync(_clientSock).GetAwaiter().GetResult();
