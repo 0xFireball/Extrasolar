@@ -3,6 +3,11 @@
 
 Framework for easy RPC (Remote Process Communication)
 
+Extrasolar abstracts all the underlying details, and lets you
+design your application as if the remote calls you make were local
+.NET methods! See the **API sample** below for code samples and a detailed
+explanation of how it works.
+
 Extrasolar uses a simple and platform agnostic protocol
 based on JSON-RPC 2.0.
 
