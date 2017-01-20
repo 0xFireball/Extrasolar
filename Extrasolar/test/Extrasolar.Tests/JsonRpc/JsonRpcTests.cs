@@ -3,6 +3,8 @@ using Extrasolar.JsonRpc.Types;
 using Extrasolar.Tests.Mocks;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -24,12 +26,18 @@ namespace Extrasolar.Tests.JsonRpc
         [Fact]
         public async Task CanCommunicate()
         {
+            int testPort = 12983;
+            TcpListener listener = new TcpListener(IPAddress.Loopback, testPort);
+            listener.Start();
+            var clientSock = new TcpClient();
+            var serverSockTask = listener.AcceptTcpClientAsync();
+            await clientSock.ConnectAsync(IPAddress.Loopback, testPort);
+            var serverSock = await serverSockTask;
             Barrier responseReceived = new Barrier(2);
-            var commStream = new UnlimitedMemoryStream();
 
-            using (var client = new JsonRpcEndpoint(commStream, JsonRpcEndpoint.EndpointMode.Client))
+            using (var client = new JsonRpcEndpoint(serverSock.GetStream(), JsonRpcEndpoint.EndpointMode.Client))
             {
-                using (var server = new JsonRpcEndpoint(commStream, JsonRpcEndpoint.EndpointMode.Server))
+                using (var server = new JsonRpcEndpoint(clientSock.GetStream(), JsonRpcEndpoint.EndpointMode.Server))
                 {
                     string pong = "pong";
                     server.RequestPipeline.AddItemToEnd((req) =>
