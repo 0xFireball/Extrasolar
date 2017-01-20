@@ -37,7 +37,7 @@ namespace Extrasolar.Demo.Loopback
             var client = new TcpClient();
             _clientSock = client;
             await client.ConnectAsync(IPAddress.Loopback, lbPort);
-            var rpcClient = new NetworkRpcClient(new TcpTransportLayer(client), JsonRpcClient.ClientMode.Request);
+            var rpcClient = new NetworkRpcEndpoint(new TcpTransportLayer(client), JsonRpcEndpoint.EndpointMode.Client);
             _ioClientsReady.SignalAndWait();
             var reqTask = rpcClient.Request(new Request("ping", null, "0"));
             var response = await reqTask;
@@ -51,7 +51,7 @@ namespace Extrasolar.Demo.Loopback
             _ioClientsReady.SignalAndWait();
             var client = await listener.AcceptTcpClientAsync();
             _serverSock = client;
-            var rpcClient = new NetworkRpcClient(new TcpTransportLayer(client), JsonRpcClient.ClientMode.Response);
+            var rpcClient = new NetworkRpcEndpoint(new TcpTransportLayer(client), JsonRpcEndpoint.EndpointMode.Server);
             rpcClient.RpcLayer.RequestPipeline.AddItemToStart((req) =>
             {
                 if (!req.IsNotification)

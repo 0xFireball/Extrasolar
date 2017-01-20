@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 
 namespace Extrasolar.IO
 {
-    public interface IRemoteRpcClient
+    public interface IRemoteRpcEndpoint
     {
-        JsonRpcClient.ClientMode Mode { get; set; }
-        JsonRpcClient RpcLayer { get; }
+        JsonRpcEndpoint.EndpointMode Mode { get; set; }
+        JsonRpcEndpoint RpcLayer { get; }
 
         Task<Response> Request(Request request);
     }

@@ -10,11 +10,11 @@ namespace Extrasolar.Rpc
 {
     public class RpcCaller<TInterface> where TInterface : class
     {
-        public NetworkRpcClient RpcClient { get; set; }
+        public NetworkRpcEndpoint RpcClient { get; set; }
 
         private int _requestCount;
 
-        public RpcCaller(NetworkRpcClient netRpcClient)
+        public RpcCaller(NetworkRpcEndpoint netRpcClient)
         {
             RpcClient = netRpcClient;
             var methods = typeof(TInterface).GetTypeInfo().GetMethods();

@@ -9,24 +9,24 @@ using System.Threading.Tasks;
 
 namespace Extrasolar.JsonRpc
 {
-    public class JsonRpcClient : IDisposable
+    public class JsonRpcEndpoint : IDisposable
     {
         [Flags]
-        public enum ClientMode
+        public enum EndpointMode
         {
-            Request = 1 << 0,
-            Response = 1 << 1,
+            Client = 1 << 0,
+            Server = 1 << 1,
         }
 
         public Stream TransportStream { get; set; }
         protected StreamWriter DataWriter { get; private set; }
         protected StreamReader DataReader { get; private set; }
-        public ClientMode Mode { get; }
+        public EndpointMode Mode { get; }
         public bool Listening => true;
 
         private SemaphoreSlim _transportLock = new SemaphoreSlim(1, 1);
 
-        public JsonRpcClient(Stream transportStream, ClientMode clientMode)
+        public JsonRpcEndpoint(Stream transportStream, EndpointMode clientMode)
         {
             TransportStream = transportStream;
             Mode = clientMode;
@@ -53,7 +53,7 @@ namespace Extrasolar.JsonRpc
                 {
                     try
                     {
-                        if (Mode == ClientMode.Request)
+                        if (Mode == EndpointMode.Client)
                         {
                             Response response;
                             var dataObject = JObject.Parse(dataJson);
@@ -69,7 +69,7 @@ namespace Extrasolar.JsonRpc
                             // Spawn new handler
                             var handlerTask = Task.Factory.StartNew(() => HandleReceivedResponse(response));
                         }
-                        if (Mode == ClientMode.Response)
+                        if (Mode == EndpointMode.Server)
                         {
                             var request = JsonConvert.DeserializeObject<Request>(dataJson);
                             // Spawn new handler
