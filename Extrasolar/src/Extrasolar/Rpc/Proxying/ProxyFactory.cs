@@ -1,6 +1,7 @@
 ﻿using Extrasolar.Rpc.Proxying.SWUtil;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -344,16 +345,18 @@ namespace Extrasolar.Rpc.Proxying
             //declare local variables
             var resultLb = mIlGen.DeclareLocal(typeof(object[])); // object[] result
 
-            //set local value with method name and arg types to improve perfmance
-            //metadata: methodInfo.Name | inputTypes[x].FullName .. |
-            var metadata = proxyMethodInfo.Name;
-            if (inputArgTypes.Length > 0)
-            {
-                var args = new string[inputArgTypes.Length];
-                for (int i = 0; i < inputArgTypes.Length; i++) args[i] = inputArgTypes[i].FullName;
-                metadata += "|" + string.Join("|", args);
-            }
-            //declare and assign string literal
+            // set local value with method name and arg types to improve perfmance
+            // metadata: methodInfo.Name | inputArgTypes[x].FullName .. |
+            //var metadata = returnType.FullName + "|" + proxyMethodInfo.Name;
+            var metadata = $"{returnType.FullName}|{proxyMethodInfo.Name}";
+            //if (inputArgTypes.Length > 0)
+            //{
+            //    var args = new string[inputArgTypes.Length];
+            //    for (int i = 0; i < inputArgTypes.Length; i++) args[i] = inputArgTypes[i].FullName;
+            //    metadata += "|" + string.Join("|", args);
+            //}
+            metadata += "|" + string.Join("|", inputArgTypes.Select(x => x.FullName));
+            // declare and assign string literal
             var metaLB = mIlGen.DeclareLocal(typeof(string));
 
 #if !NETSTANDARD1_6

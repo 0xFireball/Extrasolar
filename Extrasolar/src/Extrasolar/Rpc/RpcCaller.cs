@@ -2,6 +2,7 @@
 using Extrasolar.JsonRpc.Types;
 using Extrasolar.Rpc.Proxying;
 using Newtonsoft.Json;
+using System;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -23,6 +24,17 @@ namespace Extrasolar.Rpc
         {
             var client = CallProxy<TInterface>.CreateEmpty(this);
             return client;
+        }
+
+        internal void CallByName(string methodName, params object[] args)
+        {
+            var response = CallByNameAsync(methodName, args).Result;
+        }
+
+        internal object CallByName(string methodName, Type returnType, params object[] args)
+        {
+            var response = CallByNameAsync(methodName, args).Result;
+            return response.Result.ToObject(returnType);
         }
 
         public async Task<Response> CallByNameAsync(string methodName, params object[] args)
