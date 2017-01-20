@@ -406,6 +406,7 @@ namespace Extrasolar.Rpc.Proxying
                 }
                 mIlGen.Emit(OpCodes.Stelem_Ref); //store the reference in the args array
             }
+
             mIlGen.Emit(OpCodes.Call, targetMethodInfo);
             mIlGen.Emit(OpCodes.Stloc, resultLb.LocalIndex); //store the result
             //store the results in the arguments
