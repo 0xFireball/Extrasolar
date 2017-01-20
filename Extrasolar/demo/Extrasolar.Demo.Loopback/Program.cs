@@ -13,7 +13,7 @@ namespace Extrasolar.Demo.Loopback
     public class Program
     {
         private static Barrier _ioClientsReady = new Barrier(2);
-        private static int lbPort = 28754;
+        public const int lbPort = 28754;
         private static TcpClient _clientSock;
         private static TcpClient _serverSock;
 
@@ -27,8 +27,8 @@ namespace Extrasolar.Demo.Loopback
 
             // Test RPCCaller
             var rpcCallerDemo = new RpcCallerDemo();
-            var serverDemo2 = Task.Factory.StartNew(() => rpcCallerDemo.RunServerAsync(_serverSock));
-            var clientDemo2 = Task.Factory.StartNew(() => rpcCallerDemo.RunClientAsync(_clientSock));
+            var serverDemo2 = Task.Factory.StartNew(rpcCallerDemo.RunServerAsync);
+            var clientDemo2 = Task.Factory.StartNew(rpcCallerDemo.RunClientAsync);
             Task.Delay(-1).GetAwaiter().GetResult();
         }
 
@@ -46,6 +46,7 @@ namespace Extrasolar.Demo.Loopback
                 Console.WriteLine($"Server responded: {response}");
                 _ioClientsReady.SignalAndWait();
             }
+            _clientSock.Dispose();
         }
 
         private static async Task NetServerThread()
@@ -69,6 +70,8 @@ namespace Extrasolar.Demo.Loopback
                 _ioClientsReady.SignalAndWait();
                 _ioClientsReady.SignalAndWait();
             }
+            _serverSock.Dispose();
+            listener.Stop();
         }
     }
 }

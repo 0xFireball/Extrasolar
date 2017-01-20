@@ -2,6 +2,7 @@
 using Extrasolar.IO.Transport;
 using Extrasolar.Rpc;
 using System;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,10 +13,14 @@ namespace Extrasolar.Demo.Loopback
     {
         private Barrier _barrier = new Barrier(2);
 
-        internal async Task RunServerAsync(TcpClient serverSock)
+        internal async Task RunServerAsync()
         {
+            TcpListener listener = new TcpListener(IPAddress.Loopback, Program.lbPort);
+            listener.Start();
+            _barrier.SignalAndWait();
+            var srvSock = await listener.AcceptTcpClientAsync();
             var service = new RpcService<IHelloService>(
-                new NetworkRpcService(new TcpTransportLayer(serverSock)
+                new NetworkRpcService(new TcpTransportLayer(srvSock)
             ));
             service.Export(new HelloService());
             Console.WriteLine($"{nameof(HelloService)} ready.");
@@ -23,8 +28,11 @@ namespace Extrasolar.Demo.Loopback
             _barrier.SignalAndWait();
         }
 
-        internal async Task RunClientAsync(TcpClient clientSock)
+        internal async Task RunClientAsync()
         {
+            var clientSock = new TcpClient();
+            _barrier.SignalAndWait();
+            await clientSock.ConnectAsync(IPAddress.Loopback, Program.lbPort);
             var caller = new RpcCaller<IHelloService>(
                 new NetworkRpcClient(new TcpTransportLayer(clientSock)
             ));
