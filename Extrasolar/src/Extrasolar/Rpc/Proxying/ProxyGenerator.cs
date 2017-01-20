@@ -4,7 +4,7 @@
     {
         internal static TInterface BuildEmpty<TInterface>(DynamicMethodBinder binder) where TInterface : class
         {
-            return ProxyFactory.CreateEmptyProxy<TInterface>(binder);
+            return ProxyFactory.CreateEmptyProxy<TInterface>(binder, binder.GetType());
         }
     }
 }

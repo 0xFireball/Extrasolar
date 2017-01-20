@@ -17,19 +17,19 @@ namespace Extrasolar.Rpc.Proxying
         // pooled dictionary achieves same or better performance as ThreadStatic without creating as many builders under average load
         private static PooledDictionary<string, ProxyBuilder> _proxies = new PooledDictionary<string, ProxyBuilder>();
 
-        public static TInterface CreateEmptyProxy<TInterface>(DynamicMethodBinder methodBinder, Type parentType = null) where TInterface : class
+        public static TInterface CreateEmptyProxy<TInterface>(DynamicMethodBinder methodBinder, Type binderType) where TInterface : class
         {
             Type interfaceType = typeof(TInterface);
 
             // derive unique key for this dynamic assembly by interface, channel and ctor type names
-            var proxyName = $"{PROXY}_" + interfaceType.FullName + parentType?.FullName + $"_{Guid.NewGuid().ToString("N")}";
+            var proxyName = $"{PROXY}_" + interfaceType.FullName + binderType?.FullName + $"_{Guid.NewGuid().ToString("N")}";
 
             // get pooled proxy builder
             ProxyBuilder proxyBuilder = null;
             TInterface proxy = null;
             try
             {
-                proxyBuilder = _proxies.Request(proxyName, () => CreateSimpleProxyBuilder(proxyName, interfaceType, methodBinder, parentType));
+                proxyBuilder = _proxies.Request(proxyName, () => CreateSimpleProxyBuilder(proxyName, interfaceType, methodBinder, binderType));
                 proxy = CreateEmptyProxy<TInterface>(proxyBuilder);
             }
             finally
@@ -97,7 +97,7 @@ namespace Extrasolar.Rpc.Proxying
             return null;
         }
 
-        private static ProxyBuilder CreateSimpleProxyBuilder(string proxyName, Type interfaceType, DynamicMethodBinder methodBinder, Type parentType = null)
+        private static ProxyBuilder CreateSimpleProxyBuilder(string proxyName, Type interfaceType, DynamicMethodBinder methodBinder, Type parentType)
         {
             // create a new assembly for the proxy
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(PROXY_ASSEMBLY), AssemblyBuilderAccess.Run);
