@@ -27,7 +27,7 @@ echo "Running tests..."
 # Run tests
 dotnet test Extrasolar/test/Extrasolar.Tests
 
-echo "Publishing project..."
+echo "Packaging library..."
 
-# Publish
-dotnet publish -c Release Extrasolar/src/Extrasolar
+# Package library
+dotnet pack -c Release Extrasolar/src/Extrasolar
