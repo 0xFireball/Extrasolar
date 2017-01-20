@@ -58,10 +58,18 @@ namespace Extrasolar.JsonRpc
                 {
                     try
                     {
-                        if (Mode == EndpointMode.Client)
+                        var dataObject = JObject.Parse(dataJson);
+                        // Ignore requests if they do not match the role
+                        bool isRequest = dataObject["method"] != null;
+                        if (Mode == EndpointMode.Server && isRequest)
+                        {
+                            var request = JsonConvert.DeserializeObject<Request>(dataJson);
+                            // Spawn new handler
+                            var handlerTask = Task.Factory.StartNew(async () => await HandleReceivedRequest(request));
+                        }
+                        else if (Mode == EndpointMode.Client && !isRequest)
                         {
                             Response response;
-                            var dataObject = JObject.Parse(dataJson);
                             var successful = dataObject["error"] == null;
                             if (successful)
                             {
@@ -73,12 +81,6 @@ namespace Extrasolar.JsonRpc
                             }
                             // Spawn new handler
                             var handlerTask = Task.Factory.StartNew(() => HandleReceivedResponse(response));
-                        }
-                        if (Mode == EndpointMode.Server)
-                        {
-                            var request = JsonConvert.DeserializeObject<Request>(dataJson);
-                            // Spawn new handler
-                            var handlerTask = Task.Factory.StartNew(async () => await HandleReceivedRequest(request));
                         }
                     }
                     catch (JsonSerializationException)
