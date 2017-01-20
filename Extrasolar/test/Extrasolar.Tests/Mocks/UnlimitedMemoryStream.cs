@@ -4,72 +4,35 @@ using System.Threading;
 
 namespace Extrasolar.Tests.Mocks
 {
-    public class UnlimitedMemoryStream : Stream
+    /// <summary>
+    /// http://stackoverflow.com/a/1484960/6591463
+    /// </summary>
+    public class UnlimitedMemoryStream : MemoryStream
     {
-        private MemoryStream _memStrm = new MemoryStream();
-        private readonly AutoResetEvent _dataReadyWaitHandle = new AutoResetEvent(false);
-        private int _timeout = 5000;
+        private AutoResetEvent _dataReadyEvent = new AutoResetEvent(false);
+        private byte[] m_buffer;
+        private int m_offset;
+        private int m_count;
 
-        private long readPosition;
-        private long writePosition;
-
-        public override bool CanRead => true;
-
-        public override bool CanSeek => true;
-
-        public override bool CanWrite => true;
-
-        public override long Length => _memStrm.Length;
-
-        public override long Position
+        public override void Write(byte[] buffer, int offset, int count)
         {
-            get
-            {
-                return _memStrm.Position;
-            }
-
-            set
-            {
-                _memStrm.Position = value;
-            }
-        }
-
-        public override void Flush()
-        {
-            _memStrm.Flush();
+            m_buffer = buffer;
+            m_offset = offset;
+            m_count = count;
+            _dataReadyEvent.Set();
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            //return _memStrm.Read(buffer, offset, count);
-            int read;
-            _memStrm.Position = readPosition;
-            while ((read = _memStrm.Read(buffer, offset, count)) == 0)
+            if (m_buffer == null)
             {
-                // No data, wait for data
-                _dataReadyWaitHandle.WaitOne(_timeout);
+                // Block until the stream has some more data.
+                _dataReadyEvent.WaitOne();
             }
-            readPosition = _memStrm.Position;
-            return read;
-        }
 
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void SetLength(long value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            // Write and notify
-            _memStrm.Position = writePosition;
-            _memStrm.Write(buffer, offset, count);
-            writePosition = _memStrm.Position;
-            _dataReadyWaitHandle.Set();
+            Buffer.BlockCopy(m_buffer, 0, buffer, offset, m_count);
+            m_buffer = null;
+            return (count < m_count) ? count : m_count;
         }
     }
 }
