@@ -8,7 +8,6 @@ namespace Extrasolar.Tests.Mocks
     {
         private MemoryStream _memStrm = new MemoryStream();
         private readonly AutoResetEvent _dataReadyWaitHandle = new AutoResetEvent(false);
-        private int _timeout = 5000;
 
         public override bool CanRead => true;
 
