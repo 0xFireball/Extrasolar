@@ -198,7 +198,8 @@ namespace Extrasolar.Rpc.Proxying
 
             var mIL = methodBuilder.GetILGenerator();
             // TODO: Inject call to binder
-            var binderInvokeInfo = binder.GetType().GetMethod(DynamicMethodBinder.InvokeMethodName, BindingFlags.Instance | BindingFlags.NonPublic);
+            var binderType = binder.GetType();
+            var binderInvokeInfo = binderType.GetMethod(DynamicMethodBinder.InvokeMethodName, BindingFlags.Instance | BindingFlags.Public);
             GenerateILBinding(binderInvokeInfo, proxyMethodInfo, mIL, parameterTypes, returnType, ldindOpCodeTypeMap, stindOpCodeTypeMap);
 
             return methodBuilder;
