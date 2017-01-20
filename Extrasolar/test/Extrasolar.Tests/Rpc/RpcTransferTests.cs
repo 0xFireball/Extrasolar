@@ -1,4 +1,5 @@
 ﻿using Extrasolar.Tests.Types;
+using System;
 using Xunit;
 
 namespace Extrasolar.Tests.Rpc
@@ -28,7 +29,7 @@ namespace Extrasolar.Tests.Rpc
         public void CanCallSimpleObjects()
         {
             var c1 = new TastyCookie(TastyCookie.CookieFlavor.Chocolate, 6, 1);
-            var vol = c1.Radius * c1.Radius * c1.Thickness;
+            var vol = Math.PI * c1.Radius * c1.Radius * c1.Thickness;
             Assert.Equal(_fixture.Client.GetVolume(c1), vol);
         }
 
