@@ -82,13 +82,15 @@ namespace Extrasolar.Rpc.Proxying
         private static TInterface CreateEmptyProxy<TInterface>(ProxyBuilder proxyBuilder) where TInterface : class
         {
             //create the type and construct an instance
-            Type[] ctorArgTypes = { typeof(Type) };
+            //Type[] ctorArgTypes = { typeof(Type) };
+            Type[] ctorArgTypes = Type.EmptyTypes;
             var tInfo = proxyBuilder.TypeBuilder.CreateTypeInfo();
             var t = tInfo.AsType();
             var constructorInfo = t.GetConstructor(ctorArgTypes);
             if (constructorInfo != null)
             {
-                var instance = (TInterface)constructorInfo.Invoke(new object[] { typeof(TInterface) });
+                //var instance = (TInterface)constructorInfo.Invoke(new object[] { typeof(TInterface) });
+                var instance = (TInterface)constructorInfo.Invoke(new object[0]);
                 return instance;
             }
             return null;
