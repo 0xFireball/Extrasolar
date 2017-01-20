@@ -8,6 +8,10 @@ namespace Extrasolar.Tests.Mocks
     {
         private MemoryStream _memStrm = new MemoryStream();
         private readonly AutoResetEvent _dataReadyWaitHandle = new AutoResetEvent(false);
+        private int _timeout = 5000;
+
+        private long readPosition;
+        private long writePosition;
 
         public override bool CanRead => true;
 
@@ -37,12 +41,15 @@ namespace Extrasolar.Tests.Mocks
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            //return _memStrm.Read(buffer, offset, count);
             int read;
+            _memStrm.Position = readPosition;
             while ((read = _memStrm.Read(buffer, offset, count)) == 0)
             {
                 // No data, wait for data
-                _dataReadyWaitHandle.WaitOne();
+                _dataReadyWaitHandle.WaitOne(_timeout);
             }
+            readPosition = _memStrm.Position;
             return read;
         }
 
@@ -59,7 +66,9 @@ namespace Extrasolar.Tests.Mocks
         public override void Write(byte[] buffer, int offset, int count)
         {
             // Write and notify
+            _memStrm.Position = writePosition;
             _memStrm.Write(buffer, offset, count);
+            writePosition = _memStrm.Position;
             _dataReadyWaitHandle.Set();
         }
     }
