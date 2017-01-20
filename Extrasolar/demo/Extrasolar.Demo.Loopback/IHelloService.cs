@@ -8,7 +8,7 @@ namespace Extrasolar.Demo.Loopback
         bool IsSkyBlue();
         int Add(int a, int b);
         string Add(string a, string b);
-        double GetVolume(Cookie cookie);
-        bool Compare(Cookie c1, Cookie c2);
+        double GetVolume(TastyCookie cookie);
+        bool Compare(TastyCookie c1, TastyCookie c2);
     }
 }

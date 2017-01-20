@@ -22,12 +22,12 @@ namespace Extrasolar.Demo.Loopback
 
         public string SayHello() => "Hello, World through RPC fluent API.";
 
-        public double GetVolume(Cookie cookie)
+        public double GetVolume(TastyCookie cookie)
         {
             return Math.Pow(cookie.Radius, 2) * Math.PI * cookie.Thickness;
         }
 
-        public bool Compare(Cookie c1, Cookie c2)
+        public bool Compare(TastyCookie c1, TastyCookie c2)
         {
             return GetVolume(c1) >= GetVolume(c2);
         }

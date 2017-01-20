@@ -1,7 +1,14 @@
 ﻿namespace Extrasolar.Demo.Loopback.Types
 {
-    public class Cookie
+    public class TastyCookie
     {
+        public TastyCookie(CookieFlavor flavor, double radius, double thickness)
+        {
+            Flavor = flavor;
+            Radius = radius;
+            Thickness = thickness;
+        }
+
         public enum CookieFlavor
         {
             Oatmeal,

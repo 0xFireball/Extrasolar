@@ -1,4 +1,5 @@
-﻿using Extrasolar.IO;
+﻿using Extrasolar.Demo.Loopback.Types;
+using Extrasolar.IO;
 using Extrasolar.IO.Transport;
 using Extrasolar.Rpc;
 using System;
@@ -43,6 +44,10 @@ namespace Extrasolar.Demo.Loopback
             Console.WriteLine($"Sent command from client. Server responded {helloResult}");
             Console.WriteLine($"Is the sky blue?: {client.IsSkyBlue()}");
             Console.WriteLine($"1 + 3 is: {client.Add(1, 3)}");
+            var c1 = new TastyCookie(TastyCookie.CookieFlavor.Chocolate, 6, 1);
+            var c2 = new TastyCookie(TastyCookie.CookieFlavor.Chocolate, 8, 1.2);
+            Console.WriteLine($"Volume of TastyCookie 1 is: {client.GetVolume(c1)}");
+            Console.WriteLine($"Cookie {(client.Compare(c1, c2) ? "1" : "2")} is larger.");
             await Task.Delay(0);
         }
     }
