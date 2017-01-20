@@ -3,6 +3,8 @@ using Extrasolar.JsonRpc.Types;
 using Extrasolar.Tests.Mocks;
 using Newtonsoft.Json.Linq;
 using System;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -23,22 +25,31 @@ namespace Extrasolar.Tests.JsonRpc
         [Fact]
         public async Task CanCommunicate()
         {
+            Barrier responseReceived = new Barrier(2);
             var commStream = new UnlimitedMemoryStream();
-            using (var client = new JsonRpcEndpoint(commStream, JsonRpcEndpoint.EndpointMode.Client))
+            using (var sw = new StreamWriter(commStream))
             {
-                using (var server = new JsonRpcEndpoint(commStream, JsonRpcEndpoint.EndpointMode.Server))
+                sw.WriteLine(); // Add trailing data
+                sw.Flush();
+                sw.BaseStream.Position = 0; // Reset position
+                using (var client = new JsonRpcEndpoint(commStream, JsonRpcEndpoint.EndpointMode.Client))
                 {
-                    string pong = "pong";
-                    server.RequestPipeline.AddItemToEnd((req) =>
+                    using (var server = new JsonRpcEndpoint(commStream, JsonRpcEndpoint.EndpointMode.Server))
                     {
-                        return new ResultResponse(req, pong);
-                    });
-                    client.ResponsePipeline.AddItemToEnd((res) =>
-                    {
-                        Assert.Equal((res.Result as JValue).Value, pong);
-                        return true;
-                    });
-                    await client.SendRequest(new Request("ping", null, "0"));
+                        string pong = "pong";
+                        server.RequestPipeline.AddItemToEnd((req) =>
+                        {
+                            return new ResultResponse(req, pong);
+                        });
+                        client.ResponsePipeline.AddItemToEnd((res) =>
+                        {
+                            Assert.Equal((res.Result as JValue).Value, pong);
+                            responseReceived.SignalAndWait();
+                            return true;
+                        });
+                        await client.SendRequest(new Request("ping", null, "0"));
+                        responseReceived.SignalAndWait();
+                    }
                 }
             }
         }
