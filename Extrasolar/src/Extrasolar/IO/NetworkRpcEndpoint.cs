@@ -1,13 +1,14 @@
 ﻿using Extrasolar.IO.Transport;
 using Extrasolar.JsonRpc;
 using Extrasolar.JsonRpc.Types;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Extrasolar.IO
 {
-    public class NetworkRpcEndpoint : IRemoteRpcEndpoint
+    public class NetworkRpcEndpoint : IRemoteRpcEndpoint, IDisposable
     {
         public JsonRpcEndpoint RpcLayer { get; }
         public JsonRpcEndpoint.EndpointMode Mode { get; set; }
@@ -54,6 +55,11 @@ namespace Extrasolar.IO
             var result = ResultCache[request.Id];
             ResultCache.Remove(request.Id);
             return result;
+        }
+
+        public void Dispose()
+        {
+            RpcLayer.Dispose();
         }
 
         protected Dictionary<string, AutoResetEvent> RequestQueue { get; } = new Dictionary<string, AutoResetEvent>();

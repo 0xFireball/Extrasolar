@@ -22,9 +22,11 @@ namespace Extrasolar.JsonRpc
         protected StreamWriter DataWriter { get; private set; }
         protected StreamReader DataReader { get; private set; }
         public EndpointMode Mode { get; }
-        public bool Listening => true;
+        public bool Listening = true;
 
         private SemaphoreSlim _transportLock = new SemaphoreSlim(1, 1);
+        private CancellationToken _eventLoopCancellationToken;
+        private CancellationTokenSource _eventLoopCancellationTokenSource;
 
         public JsonRpcEndpoint(Stream transportStream, EndpointMode clientMode)
         {
@@ -33,7 +35,9 @@ namespace Extrasolar.JsonRpc
             DataWriter = new StreamWriter(TransportStream);
             DataReader = new StreamReader(TransportStream);
 
-            Task.Factory.StartNew(ReceiveDataEventLoop);
+            _eventLoopCancellationTokenSource = new CancellationTokenSource();
+            _eventLoopCancellationToken = _eventLoopCancellationTokenSource.Token;
+            EventLoopTask = Task.Factory.StartNew(ReceiveDataEventLoop, _eventLoopCancellationToken);
         }
 
         public async Task SendRequest(Request request)
@@ -48,6 +52,7 @@ namespace Extrasolar.JsonRpc
         {
             while (Listening)
             {
+                if (_eventLoopCancellationToken.IsCancellationRequested) break;
                 var dataJson = await DataReader.ReadLineAsync();
                 if (dataJson != null)
                 {
@@ -129,6 +134,8 @@ namespace Extrasolar.JsonRpc
 
         public void Dispose()
         {
+            Listening = false;
+            _eventLoopCancellationTokenSource.Cancel(false);
             DataWriter?.Dispose();
             DataReader?.Dispose();
         }
@@ -146,6 +153,8 @@ namespace Extrasolar.JsonRpc
         /// and the pipeline will end. Otherwise, the next handler will be called.
         /// </summary>
         public Pipelines<Response, bool> ResponsePipeline { get; } = new Pipelines<Response, bool>();
+
+        protected Task<Task> EventLoopTask { get; private set; }
 
         /// <summary>
         /// A notify-only event that fires whenever a request is received

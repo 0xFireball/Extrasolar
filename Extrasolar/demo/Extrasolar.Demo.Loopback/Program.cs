@@ -2,7 +2,6 @@
 using Extrasolar.IO.Transport;
 using Extrasolar.JsonRpc;
 using Extrasolar.JsonRpc.Types;
-using Extrasolar.Rpc;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -25,10 +24,11 @@ namespace Extrasolar.Demo.Loopback
             var client = Task.Factory.StartNew(NetClientThread);
             // Wait for first demo
             client.GetAwaiter().GetResult().GetAwaiter().GetResult();
+
             // Test RPCCaller
             var rpcCallerDemo = new RpcCallerDemo();
-            var serverDemo2 = rpcCallerDemo.RunServerAsync(_serverSock);
-            rpcCallerDemo.RunClientAsync(_clientSock).GetAwaiter().GetResult();
+            var serverDemo2 = Task.Factory.StartNew(() => rpcCallerDemo.RunServerAsync(_serverSock));
+            var clientDemo2 = Task.Factory.StartNew(() => rpcCallerDemo.RunClientAsync(_clientSock));
             Task.Delay(-1).GetAwaiter().GetResult();
         }
 
@@ -38,11 +38,14 @@ namespace Extrasolar.Demo.Loopback
             var client = new TcpClient();
             _clientSock = client;
             await client.ConnectAsync(IPAddress.Loopback, lbPort);
-            var rpcClient = new NetworkRpcEndpoint(new TcpTransportLayer(client), JsonRpcEndpoint.EndpointMode.Client);
-            _ioClientsReady.SignalAndWait();
-            var reqTask = rpcClient.Request(new Request("ping", null, "0"));
-            var response = await reqTask;
-            Console.WriteLine($"Server responded: {response}");
+            using (var rpcClient = new NetworkRpcEndpoint(new TcpTransportLayer(client), JsonRpcEndpoint.EndpointMode.Client))
+            {
+                _ioClientsReady.SignalAndWait();
+                var reqTask = rpcClient.Request(new Request("ping", null, "0"));
+                var response = await reqTask;
+                Console.WriteLine($"Server responded: {response}");
+                _ioClientsReady.SignalAndWait();
+            }
         }
 
         private static async Task NetServerThread()
@@ -52,17 +55,20 @@ namespace Extrasolar.Demo.Loopback
             _ioClientsReady.SignalAndWait();
             var client = await listener.AcceptTcpClientAsync();
             _serverSock = client;
-            var rpcClient = new NetworkRpcEndpoint(new TcpTransportLayer(client), JsonRpcEndpoint.EndpointMode.Server);
-            rpcClient.RpcLayer.RequestPipeline.AddItemToStart((req) =>
+            using (var rpcServer = new NetworkRpcEndpoint(new TcpTransportLayer(client), JsonRpcEndpoint.EndpointMode.Server))
             {
-                if (!req.IsNotification)
+                rpcServer.RpcLayer.RequestPipeline.AddItemToStart((req) =>
                 {
-                    Console.WriteLine($"Client called method {req.Method}.");
-                    return new ResultResponse(req, "pong");
-                }
-                return null;
-            });
-            _ioClientsReady.SignalAndWait();
+                    if (!req.IsNotification)
+                    {
+                        Console.WriteLine($"Client called method {req.Method}.");
+                        return new ResultResponse(req, "pong");
+                    }
+                    return null;
+                });
+                _ioClientsReady.SignalAndWait();
+                _ioClientsReady.SignalAndWait();
+            }
         }
     }
 }

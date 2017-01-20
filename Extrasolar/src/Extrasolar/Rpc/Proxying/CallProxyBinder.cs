@@ -17,7 +17,7 @@ namespace Extrasolar.Rpc.Proxying
 
         public override object[] InvokeMethod(string metadata, params object[] parameters)
         {
-            Console.WriteLine(metadata);
+            //Console.WriteLine(metadata);
             // Parse metadata
             var metadataComponents = metadata.Split('|');
             var returnTypeName = metadataComponents[0];
