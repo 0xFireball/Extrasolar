@@ -2,7 +2,8 @@
 # Extrasolar
 
 Framework for easy RPC (Remote Process Communication)!
-- Supports .NET Standard 1.6!
+Supports .NET Standard 1.6, so will run on any modern
+.NET platform, including .NET Core!
 
 
 [![Build Status](https://travis-ci.org/0xFireball/Extrasolar.svg?branch=master)](https://travis-ci.org/0xFireball/Extrasolar)
