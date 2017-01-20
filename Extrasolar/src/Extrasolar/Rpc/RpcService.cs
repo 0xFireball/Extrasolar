@@ -131,8 +131,15 @@ namespace Extrasolar.Rpc
                 var callParam = callArgs[i];
                 if (!paramType.IsInstanceOfType(callParam))
                 {
-                    // If the call parameter isn't an instance, cast
-                    callArgs[i] = Convert.ChangeType(callParam, paramType);
+                    // If the call parameter doesn't match, cast
+                    if (callParam is JObject)
+                    {
+                        callArgs[i] = ((JObject)callParam).ToObject(paramType);
+                    }
+                    else
+                    {
+                        callArgs[i] = Convert.ChangeType(callParam, paramType);
+                    }
                 }
             }
             try
