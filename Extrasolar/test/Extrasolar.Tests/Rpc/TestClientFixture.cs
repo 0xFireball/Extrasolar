@@ -11,6 +11,7 @@ namespace Extrasolar.Tests.Rpc
     public class TestClientFixture : IDisposable
     {
         public RpcService<ITestService> Service { get; }
+        public RpcCaller<ITestService> Caller { get; }
         public ITestService Client { get; }
 
         public TestClientFixture()
@@ -21,18 +22,18 @@ namespace Extrasolar.Tests.Rpc
             Service = new RpcService<ITestService>(
                 new NetworkRpcService(new TcpTransportLayer(serverSock)
             ));
-            var caller = new RpcCaller<ITestService>(
+            Caller = new RpcCaller<ITestService>(
                 new NetworkRpcClient(new TcpTransportLayer(clientSock)
             ));
             Service.Export(new TestService());
-            Client = caller.CreateClient();
+            Client = Caller.CreateClient();
         }
 
         private async Task<Tuple<TcpClient, TcpClient>> CreateSockets()
         {
-            int testPort = 12983;
-            TcpListener listener = new TcpListener(IPAddress.Loopback, testPort);
+            TcpListener listener = new TcpListener(IPAddress.Loopback, 0);
             listener.Start();
+            var testPort = ((IPEndPoint)listener.LocalEndpoint).Port;
             var clientSock = new TcpClient();
             var serverSockTask = listener.AcceptTcpClientAsync();
             await clientSock.ConnectAsync(IPAddress.Loopback, testPort);
@@ -42,6 +43,8 @@ namespace Extrasolar.Tests.Rpc
 
         public void Dispose()
         {
+            Service.Dispose();
+            Caller.Dispose();
         }
     }
 }
