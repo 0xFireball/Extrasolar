@@ -129,22 +129,10 @@ namespace Extrasolar.Rpc
             {
                 var paramType = parameterTypes[i];
                 var callParam = callArgs[i];
-                if (!paramType.IsInstanceOfType(callParam))
+                if (!paramType.IsInstanceOfType(callParam) || paramType == typeof(object))
                 {
-                    // If the call parameter doesn't match, cast
-                    if ((callParam is JObject) || (callParam is JArray))
-                    {
-                        callArgs[i] = ((JToken)callParam).ToObject(paramType);
-                    }
-                    else if (callParam is JValue)
-                    {
-                        var valueObject = ((JValue)callParam).Value;
-                        callArgs[i] = Convert.ChangeType(valueObject, paramType);
-                    }
-                    else
-                    {
-                        callArgs[i] = Convert.ChangeType(callParam, paramType);
-                    }
+                    // If the call parameter doesn't match, change type
+                    callArgs[i] = AutoConvert(callParam, paramType);
                 }
             }
             try
@@ -157,6 +145,33 @@ namespace Extrasolar.Rpc
             {
                 return new ErrorResponse(request, new Error(-1, ex.Message, ex.ToString()));
             }
+        }
+
+        public object AutoConvert(object obj, Type type)
+        {
+            object result = null;
+            // If the call parameter doesn't match, cast
+            if ((obj is JObject) || (obj is JArray))
+            {
+                if (type == typeof(object))
+                {
+                    result = ((JToken)obj).ToObject<dynamic>();
+                }
+                else
+                {
+                    result = ((JToken)obj).ToObject(type);
+                }
+            }
+            else if (obj is JValue)
+            {
+                var valueObject = ((JValue)obj).Value;
+                result = Convert.ChangeType(valueObject, type);
+            }
+            else
+            {
+                result = Convert.ChangeType(obj, type);
+            }
+            return result;
         }
 
         /// <summary>
