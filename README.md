@@ -3,6 +3,8 @@
 
 Framework for easy RPC (Remote Process Communication)
 
+[![Build Status](https://travis-ci.org/0xFireball/Extrasolar.svg?branch=master)](https://travis-ci.org/0xFireball/Extrasolar)
+
 Extrasolar abstracts all the underlying details, and lets you
 design your application as if the remote calls you make were local
 .NET methods! See the **API sample** below for code samples and a detailed
