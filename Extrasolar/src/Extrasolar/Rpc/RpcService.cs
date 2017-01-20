@@ -132,9 +132,9 @@ namespace Extrasolar.Rpc
                 if (!paramType.IsInstanceOfType(callParam))
                 {
                     // If the call parameter doesn't match, cast
-                    if (callParam is JObject)
+                    if ((callParam is JObject) || (callParam is JArray))
                     {
-                        callArgs[i] = ((JObject)callParam).ToObject(paramType);
+                        callArgs[i] = ((JToken)callParam).ToObject(paramType);
                     }
                     else
                     {
