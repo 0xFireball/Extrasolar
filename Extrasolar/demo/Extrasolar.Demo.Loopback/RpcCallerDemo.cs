@@ -40,7 +40,7 @@ namespace Extrasolar.Demo.Loopback
             _barrier.SignalAndWait();
             var client = caller.CreateClient();
             var result = client.SayHello();
-            Console.WriteLine("Sent command from client.");
+            Console.WriteLine($"Sent command from client. Server responded {result}");
             await Task.Delay(0);
         }
     }
