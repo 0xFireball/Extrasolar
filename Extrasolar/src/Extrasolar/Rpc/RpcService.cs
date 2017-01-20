@@ -42,7 +42,8 @@ namespace Extrasolar.Rpc
                     if (paramsData is JArray)
                     {
                         // TODO: Properly deserialize values
-                        var paramsArray = (paramsData as JArray).ToArray().Select(x => (x as JValue).Value);
+                        //var paramsArray = (paramsData as JArray).Children().Select(x => x.ToObject<object>());
+                        var paramsArray = JsonConvert.DeserializeObject<object[]>((string)rawParams);
                         foreach (var parameter in paramsArray)
                         {
                             callArgs.Add(parameter);
