@@ -157,8 +157,7 @@ namespace Extrasolar.Rpc.Proxying
             var methods = GetAllMethods(allInterfaces);
             foreach (MethodInfo methodInfo in methods)
             {
-                BindMethod(methodBinder, methodInfo, typeBuilder, ldindOpCodeTypeMap, stindOpCodeTypeMap);
-                var methodBuilder = ConstructMethod(parentType, methodInfo, typeBuilder, ldindOpCodeTypeMap, stindOpCodeTypeMap);
+                var methodBuilder = BindMethod(methodBinder, methodInfo, typeBuilder, ldindOpCodeTypeMap, stindOpCodeTypeMap);
                 typeBuilder.DefineMethodOverride(methodBuilder, methodInfo);
             }
 
@@ -195,7 +194,7 @@ namespace Extrasolar.Rpc.Proxying
 
             var mIL = methodBuilder.GetILGenerator();
             // TODO: Inject call to binder
-            var binderInvokeInfo = binder.GetType().GetMethod(nameof(IMethodBinder.InvokeMethod), BindingFlags.Instance | BindingFlags.NonPublic);
+            var binderInvokeInfo = binder.GetType().GetMethod(nameof(IMethodBinder.InvokeMethod));
             GenerateILBinding(binderInvokeInfo, proxyMethodInfo, mIL, parameterTypes, returnType, ldindOpCodeTypeMap, stindOpCodeTypeMap);
 
             return methodBuilder;
