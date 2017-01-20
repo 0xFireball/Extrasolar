@@ -355,7 +355,7 @@ namespace Extrasolar.Rpc.Proxying
             //    for (int i = 0; i < inputArgTypes.Length; i++) args[i] = inputArgTypes[i].FullName;
             //    metadata += "|" + string.Join("|", args);
             //}
-            metadata += "|" + string.Join("|", inputArgTypes.Select(x => x.FullName));
+            metadata += inputArgTypes.Length > 0 ? "|" + string.Join("|", inputArgTypes.Select(x => x.FullName)) : "";
             // declare and assign string literal
             var metaLB = mIlGen.DeclareLocal(typeof(string));
 

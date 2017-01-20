@@ -15,6 +15,7 @@ namespace Extrasolar.Rpc.Proxying
 
         public object[] InvokeMethod(string metadata, params object[] parameters)
         {
+            Console.WriteLine(metadata);
             // Parse metadata
             var metadataComponents = metadata.Split('|');
             var returnTypeName = metadataComponents[0];
@@ -25,7 +26,7 @@ namespace Extrasolar.Rpc.Proxying
             }
             var methodName = metadataComponents[1];
             List<Type> parameterTypes = new List<Type>();
-            if (metadataComponents.Length > 1)
+            if (metadataComponents.Length > 2)
             {
                 parameterTypes.AddRange(metadataComponents[1].Split('|').Select(typeFullName => Type.GetType(typeFullName)));
             }
@@ -33,6 +34,7 @@ namespace Extrasolar.Rpc.Proxying
             object result = null;
             if (returnType != null)
             {
+                Console.WriteLine("Caller available: " + _caller != null);
                 result = _caller.CallByName(methodName, returnType, parameters);
                 // Return result
                 return new[] { result };
