@@ -2,13 +2,15 @@
 
 namespace Extrasolar.Rpc
 {
-    public class RpcService<TInterface>
+    public class RpcService<TInterface> where TInterface : class
     {
-        private NetworkRpcEndpoint networkRpcEndpoint;
+        public NetworkRpcEndpoint RpcClient { get; set; }
 
-        public RpcService(NetworkRpcEndpoint networkRpcEndpoint)
+        private int _requestCount;
+
+        public RpcService(NetworkRpcService netRpcClient)
         {
-            this.networkRpcEndpoint = networkRpcEndpoint;
+            RpcClient = netRpcClient;
         }
     }
 }

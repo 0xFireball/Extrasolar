@@ -3,7 +3,6 @@ using Extrasolar.JsonRpc.Types;
 using Extrasolar.Rpc.Proxying;
 using Newtonsoft.Json;
 using System;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Extrasolar.Rpc
@@ -14,10 +13,9 @@ namespace Extrasolar.Rpc
 
         private int _requestCount;
 
-        public RpcCaller(NetworkRpcEndpoint netRpcClient)
+        public RpcCaller(NetworkRpcClient netRpcClient)
         {
             RpcClient = netRpcClient;
-            var methods = typeof(TInterface).GetTypeInfo().GetMethods();
         }
 
         public TInterface CreateClient()
