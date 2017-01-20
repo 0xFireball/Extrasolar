@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Extrasolar.Rpc.Proxying
 {
-    public class CallProxyBinder<TInterface> : IMethodBinder, IDisposable where TInterface : class
+    internal class CallProxyBinder<TInterface> : MethodBinder, IDisposable where TInterface : class
     {
         private RpcCaller<TInterface> _caller;
 
@@ -18,7 +18,7 @@ namespace Extrasolar.Rpc.Proxying
             //GC.SuppressFinalize(this);
         }
 
-        public object[] InvokeMethod(string metadata, params object[] parameters)
+        public override object[] InvokeMethod(string metadata, params object[] parameters)
         {
             Console.WriteLine(metadata);
             // Parse metadata

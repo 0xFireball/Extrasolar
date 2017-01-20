@@ -17,7 +17,7 @@ namespace Extrasolar.Rpc.Proxying
         // pooled dictionary achieves same or better performance as ThreadStatic without creating as many builders under average load
         private static PooledDictionary<string, ProxyBuilder> _proxies = new PooledDictionary<string, ProxyBuilder>();
 
-        public static TInterface CreateEmptyProxy<TInterface>(IMethodBinder methodBinder, Type parentType = null) where TInterface : class
+        public static TInterface CreateEmptyProxy<TInterface>(MethodBinder methodBinder, Type parentType = null) where TInterface : class
         {
             Type interfaceType = typeof(TInterface);
 
@@ -97,7 +97,7 @@ namespace Extrasolar.Rpc.Proxying
             return null;
         }
 
-        private static ProxyBuilder CreateSimpleProxyBuilder(string proxyName, Type interfaceType, IMethodBinder methodBinder, Type parentType = null)
+        private static ProxyBuilder CreateSimpleProxyBuilder(string proxyName, Type interfaceType, MethodBinder methodBinder, Type parentType = null)
         {
             // create a new assembly for the proxy
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(PROXY_ASSEMBLY), AssemblyBuilderAccess.Run);
@@ -110,13 +110,14 @@ namespace Extrasolar.Rpc.Proxying
 
             // Construct the type builder
             TypeBuilder typeBuilder;
+            var genTypeName = $"{PROXY}_" + interfaceType.FullName + parentType?.FullName + $"_{Guid.NewGuid().ToString("N")}_{PROXY}";
             if (parentType != null)
             {
-                typeBuilder = moduleBuilder.DefineType(interfaceType.Name + PROXY, typeAttributes, parentType);
+                typeBuilder = moduleBuilder.DefineType(genTypeName, typeAttributes, parentType);
             }
             else
             {
-                typeBuilder = moduleBuilder.DefineType(interfaceType.Name + PROXY, typeAttributes);
+                typeBuilder = moduleBuilder.DefineType(genTypeName, typeAttributes);
             }
             var allInterfaces = new List<Type>(interfaceType.GetInterfaces());
             allInterfaces.Add(interfaceType);
@@ -186,7 +187,7 @@ namespace Extrasolar.Rpc.Proxying
         /// <param name="ldindOpCodeTypeMap"></param>
         /// <param name="stindOpCodeTypeMap"></param>
         /// <returns></returns>
-        public static MethodBuilder BindMethod(IMethodBinder binder, MethodInfo proxyMethodInfo, TypeBuilder typeBuilder, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
+        public static MethodBuilder BindMethod(MethodBinder binder, MethodInfo proxyMethodInfo, TypeBuilder typeBuilder, Dictionary<Type, OpCode> ldindOpCodeTypeMap, Dictionary<Type, OpCode> stindOpCodeTypeMap)
         {
             var paramInfos = proxyMethodInfo.GetParameters();
             int nofParams = paramInfos.Length;
@@ -197,7 +198,7 @@ namespace Extrasolar.Rpc.Proxying
 
             var mIL = methodBuilder.GetILGenerator();
             // TODO: Inject call to binder
-            var binderInvokeInfo = binder.GetType().GetMethod(nameof(IMethodBinder.InvokeMethod));
+            var binderInvokeInfo = binder.GetType().GetMethod(nameof(MethodBinder.InvokeMethod));
             GenerateILBinding(binderInvokeInfo, proxyMethodInfo, mIL, parameterTypes, returnType, ldindOpCodeTypeMap, stindOpCodeTypeMap);
 
             return methodBuilder;
