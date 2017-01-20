@@ -18,6 +18,7 @@ based on JSON-RPC 2.0.
 - Fluent .NET driver for Extrasolar RPC
   - Dynamic object proxying and method dispatching
   - Simulates an interface instance
+  - Transparent RPC relay
 
 ## .NET API Sample
 
@@ -81,6 +82,18 @@ like a normal method call.
   and handle them in-process to save resources, then
   send them back
   - In terms of goals, JSON-RPC is very similar to REST
+- If you're building your own application, Extrasolar will
+  fit better connecting your client application to a server application
+  than using another protocol such as REST over HTTP, as the library abstracts
+  all of the remote calling logic, leaving you with interfaces that you can
+  use just as you would local types
+
+### Use cases
+
+- A client application with a server that provides an API
+  - Remote data processing
+- A resource-intensive process that hosts a service, making it
+  available to other processes on the local machine
 
 
 ## Credits
