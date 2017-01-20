@@ -82,7 +82,13 @@ namespace Extrasolar.Rpc
                         if (!paramType.IsInstanceOfType(callParam))
                         {
                             // If the call parameter isn't an instance, cast
-                            tmpCallArgs[i] = Convert.ChangeType(callParam, paramType);
+                            var originalCallArgType = callParam.GetType();
+                            // Only convert long to int for calls
+                            //tmpCallArgs[i] = Convert.ChangeType(callParam, paramType);
+                            if (paramType == typeof(int) && callParam is long)
+                            {
+                                tmpCallArgs[i] = Convert.ChangeType(callParam, typeof(int));
+                            }
                             // If that succeeded, types are convertible.
                             // Now make sure it's assignable
                             if (!paramType.IsAssignableFrom(tmpCallArgs[i].GetType()))
