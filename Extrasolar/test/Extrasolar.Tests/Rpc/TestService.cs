@@ -1,5 +1,6 @@
 ﻿using Extrasolar.Tests.Types;
 using System;
+using System.Linq;
 
 namespace Extrasolar.Tests.Rpc
 {
@@ -22,6 +23,16 @@ namespace Extrasolar.Tests.Rpc
         public bool Compare(TastyCookie c1, TastyCookie c2)
         {
             return GetVolume(c1) >= GetVolume(c2);
+        }
+
+        public int ArraySum(int[] vals)
+        {
+            return vals.Sum();
+        }
+
+        public int[] CombineArrays(int[] a1, int[] a2)
+        {
+            return a1.Concat(a2).ToArray();
         }
     }
 }

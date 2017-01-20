@@ -1,5 +1,6 @@
 ﻿using Extrasolar.Tests.Types;
 using System;
+using System.Linq;
 using Xunit;
 
 namespace Extrasolar.Tests.Rpc
@@ -39,6 +40,22 @@ namespace Extrasolar.Tests.Rpc
             var c1 = new TastyCookie(TastyCookie.CookieFlavor.Chocolate, 6, 1);
             var c2 = new TastyCookie(TastyCookie.CookieFlavor.Chocolate, 8, 1.2);
             Assert.Equal(_fixture.Client.Compare(c1, c2), false);
+        }
+
+        [Fact]
+        public void CanCallArrayParameters()
+        {
+            var ints = new[] { 1, 2, 3, 4 };
+            Assert.Equal(_fixture.Client.ArraySum(ints), ints.Sum());
+        }
+
+        [Fact]
+        public void CanReceiveArrayReturn()
+        {
+            var a1 = new[] { 1, 2, 3, 4 };
+            var a2 = new[] { 5, 6, 7, 8 };
+            var combined = a1.Concat(a2);
+            Assert.Equal(_fixture.Client.CombineArrays(a1, a2), combined);
         }
     }
 }
