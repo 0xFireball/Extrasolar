@@ -5,6 +5,11 @@ namespace Extrasolar.JsonRpc.Types
 {
     public class Error
     {
+        [JsonConstructor]
+        public Error()
+        {
+        }
+
         public Error(JsonRpcErrorCode code, string message, JToken data) : this((int)code, message, data)
         {
         }
