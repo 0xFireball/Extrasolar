@@ -117,7 +117,7 @@ namespace Extrasolar.Tests.JsonRpc
             });
             await Task.Factory.StartNew(async () =>
             {
-                await _fixture.Client.SendRequest(new Request("ping", null, null));
+                await _fixture.Client.SendRequest(new Request("ping", null, "0"));
             });
             responseReceived.SignalAndWait();
         }
