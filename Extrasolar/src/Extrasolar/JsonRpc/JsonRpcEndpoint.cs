@@ -53,40 +53,48 @@ namespace Extrasolar.JsonRpc
             while (Listening)
             {
                 if (_eventLoopCancellationToken.IsCancellationRequested) break;
-                var dataJson = await DataReader.ReadLineAsync();
-                if (dataJson != null)
+                try
                 {
-                    try
+                    var dataJson = await DataReader.ReadLineAsync();
+
+                    if (dataJson != null)
                     {
-                        var dataObject = JObject.Parse(dataJson);
-                        // Ignore requests if they do not match the role
-                        bool isRequest = dataObject["method"] != null;
-                        if (Mode == EndpointMode.Server && isRequest)
+                        try
                         {
-                            var request = JsonConvert.DeserializeObject<Request>(dataJson);
-                            // Spawn new handler
-                            var handlerTask = Task.Factory.StartNew(async () => await HandleReceivedRequest(request));
+                            var dataObject = JObject.Parse(dataJson);
+                            // Ignore requests if they do not match the role
+                            bool isRequest = dataObject["method"] != null;
+                            if (Mode == EndpointMode.Server && isRequest)
+                            {
+                                var request = JsonConvert.DeserializeObject<Request>(dataJson);
+                                // Spawn new handler
+                                var handlerTask = Task.Factory.StartNew(async () => await HandleReceivedRequest(request));
+                            }
+                            else if (Mode == EndpointMode.Client && !isRequest)
+                            {
+                                Response response;
+                                var successful = dataObject["error"] == null;
+                                if (successful)
+                                {
+                                    response = dataObject.ToObject<ResultResponse>();
+                                }
+                                else
+                                {
+                                    response = dataObject.ToObject<ErrorResponse>();
+                                }
+                                // Spawn new handler
+                                var handlerTask = Task.Factory.StartNew(() => HandleReceivedResponse(response));
+                            }
                         }
-                        else if (Mode == EndpointMode.Client && !isRequest)
+                        catch (JsonSerializationException)
                         {
-                            Response response;
-                            var successful = dataObject["error"] == null;
-                            if (successful)
-                            {
-                                response = dataObject.ToObject<ResultResponse>();
-                            }
-                            else
-                            {
-                                response = dataObject.ToObject<ErrorResponse>();
-                            }
-                            // Spawn new handler
-                            var handlerTask = Task.Factory.StartNew(() => HandleReceivedResponse(response));
+                            // Invalid data
                         }
                     }
-                    catch (JsonSerializationException)
-                    {
-                        // Invalid data
-                    }
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Connection closed, most likely while listening
                 }
             }
         }
