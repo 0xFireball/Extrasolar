@@ -9,13 +9,25 @@ using Xunit;
 
 namespace Extrasolar.Tests.JsonRpc
 {
-    public class JsonRpcTests : IClassFixture<TestEndpointsFixture>
+    public class JsonRpcTests : IDisposable
     {
-        private TestEndpointsFixture _fixture;
+        public JsonRpcEndpoint Client { get; }
+        public JsonRpcEndpoint Server { get; }
 
-        public JsonRpcTests(TestEndpointsFixture fixture)
+        public JsonRpcTests()
         {
-            _fixture = fixture;
+            var sockets = SocketProvider.CreateSockets().Result;
+            var clientSock = sockets.Item1;
+            var serverSock = sockets.Item2;
+
+            Client = new JsonRpcEndpoint(clientSock.GetStream(), JsonRpcEndpoint.EndpointMode.Client);
+            Server = new JsonRpcEndpoint(serverSock.GetStream(), JsonRpcEndpoint.EndpointMode.Server);
+        }
+
+        public void Dispose()
+        {
+            Client.Dispose();
+            Server.Dispose();
         }
 
         [Fact]
@@ -33,11 +45,11 @@ namespace Extrasolar.Tests.JsonRpc
         {
             Barrier responseReceived = new Barrier(2);
             string pong = "pong";
-            _fixture.Server.RequestPipeline.AddItemToEnd((req) =>
+            Server.RequestPipeline.AddItemToEnd((req) =>
             {
                 return new ResultResponse(req, pong);
             });
-            _fixture.Client.ResponsePipeline.AddItemToEnd((res) =>
+            Client.ResponsePipeline.AddItemToEnd((res) =>
             {
                 Assert.Equal((res.Result as JValue).Value, pong);
                 responseReceived.SignalAndWait();
@@ -45,7 +57,7 @@ namespace Extrasolar.Tests.JsonRpc
             });
             await Task.Factory.StartNew(async () =>
             {
-                await _fixture.Client.SendRequest(new Request("ping", null, "0"));
+                await Client.SendRequest(new Request("ping", null, "0"));
             });
             responseReceived.SignalAndWait();
         }
@@ -55,11 +67,11 @@ namespace Extrasolar.Tests.JsonRpc
         {
             Barrier responseReceived = new Barrier(2);
             string pong = "pong";
-            _fixture.Server.RequestPipeline.AddItemToEnd((req) =>
+            Server.RequestPipeline.AddItemToEnd((req) =>
             {
                 return new ResultResponse(req, pong);
             });
-            _fixture.Client.ResponsePipeline.AddItemToEnd((res) =>
+            Client.ResponsePipeline.AddItemToEnd((res) =>
             {
                 Assert.NotNull(res.Id);
                 responseReceived.SignalAndWait();
@@ -67,7 +79,7 @@ namespace Extrasolar.Tests.JsonRpc
             });
             await Task.Factory.StartNew(async () =>
             {
-                await _fixture.Client.SendRequest(new Request("ping", null, "0"));
+                await Client.SendRequest(new Request("ping", null, "0"));
             });
             responseReceived.SignalAndWait();
         }
@@ -77,7 +89,7 @@ namespace Extrasolar.Tests.JsonRpc
         {
             Barrier responseReceived = new Barrier(2);
             string pong = "pong";
-            _fixture.Server.RequestPipeline.AddItemToEnd((req) =>
+            Server.RequestPipeline.AddItemToEnd((req) =>
             {
                 if (req.Id == null)
                 {
@@ -86,14 +98,14 @@ namespace Extrasolar.Tests.JsonRpc
                 }
                 return new ResultResponse(req, pong);
             });
-            _fixture.Client.ResponsePipeline.AddItemToEnd((res) =>
+            Client.ResponsePipeline.AddItemToEnd((res) =>
             {
                 // Server should not respond
                 throw new NotImplementedException();
             });
             await Task.Factory.StartNew(async () =>
             {
-                await _fixture.Client.SendRequest(new Request("ping", null, null));
+                await Client.SendRequest(new Request("ping", null, null));
             });
             responseReceived.SignalAndWait();
         }
@@ -103,11 +115,11 @@ namespace Extrasolar.Tests.JsonRpc
         {
             Barrier responseReceived = new Barrier(2);
             string pong = "pong";
-            _fixture.Server.RequestPipeline.AddItemToEnd((req) =>
+            Server.RequestPipeline.AddItemToEnd((req) =>
             {
                 return new ErrorResponse(req, new Error(Error.JsonRpcErrorCode.ServerError, pong, null));
             });
-            _fixture.Client.ResponsePipeline.AddItemToEnd((res) =>
+            Client.ResponsePipeline.AddItemToEnd((res) =>
             {
                 // Server should send response with server error
                 Assert.Equal(res.Error.GetErrorCode(), Error.JsonRpcErrorCode.ServerError);
@@ -117,7 +129,7 @@ namespace Extrasolar.Tests.JsonRpc
             });
             await Task.Factory.StartNew(async () =>
             {
-                await _fixture.Client.SendRequest(new Request("ping", null, "0"));
+                await Client.SendRequest(new Request("ping", null, "0"));
             });
             responseReceived.SignalAndWait();
         }
