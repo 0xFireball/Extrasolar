@@ -3,8 +3,6 @@ using Extrasolar.JsonRpc.Types;
 using Extrasolar.Tests.Mocks;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -48,6 +46,54 @@ namespace Extrasolar.Tests.JsonRpc
             await Task.Factory.StartNew(async () =>
             {
                 await _fixture.Client.SendRequest(new Request("ping", null, "0"));
+            });
+            responseReceived.SignalAndWait();
+        }
+
+        [Fact]
+        public async Task ResponseIdIsPresent()
+        {
+            Barrier responseReceived = new Barrier(2);
+            string pong = "pong";
+            _fixture.Server.RequestPipeline.AddItemToEnd((req) =>
+            {
+                return new ResultResponse(req, pong);
+            });
+            _fixture.Client.ResponsePipeline.AddItemToEnd((res) =>
+            {
+                Assert.NotNull(res.Id);
+                responseReceived.SignalAndWait();
+                return true;
+            });
+            await Task.Factory.StartNew(async () =>
+            {
+                await _fixture.Client.SendRequest(new Request("ping", null, "0"));
+            });
+            responseReceived.SignalAndWait();
+        }
+
+        [Fact]
+        public async Task ServerDoesNotRespondToNotifications()
+        {
+            Barrier responseReceived = new Barrier(2);
+            string pong = "pong";
+            _fixture.Server.RequestPipeline.AddItemToEnd((req) =>
+            {
+                if (req.Id == null)
+                {
+                    responseReceived.SignalAndWait();
+                    return null;
+                }
+                return new ResultResponse(req, pong);
+            });
+            _fixture.Client.ResponsePipeline.AddItemToEnd((res) =>
+            {
+                // Server should not respond
+                throw new NotImplementedException();
+            });
+            await Task.Factory.StartNew(async () =>
+            {
+                await _fixture.Client.SendRequest(new Request("ping", null, null));
             });
             responseReceived.SignalAndWait();
         }
