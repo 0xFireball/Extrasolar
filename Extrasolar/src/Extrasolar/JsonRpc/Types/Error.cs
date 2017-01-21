@@ -5,6 +5,10 @@ namespace Extrasolar.JsonRpc.Types
 {
     public class Error
     {
+        public Error(JsonRpcErrorCode code, string message, JToken data) : this((int)code, message, data)
+        {
+        }
+
         public Error(int code, string message, JToken data)
         {
             Code = code;
@@ -26,7 +30,20 @@ namespace Extrasolar.JsonRpc.Types
             return JsonConvert.SerializeObject(this);
         }
 
-        public enum JsonRpcErrorCodes
+        public JsonRpcErrorCode GetErrorCode()
+        {
+            if (Code <= -32000 && Code >= -32768)
+            {
+                // Spec error code
+                return (JsonRpcErrorCode)Code;
+            }
+            return JsonRpcErrorCode.ApplicationDefined;
+        }
+
+        /// <summary>
+        /// Used to specify a specific error code.
+        /// </summary>
+        public enum JsonRpcErrorCode
         {
             // User-defined
 
