@@ -59,7 +59,7 @@ namespace Extrasolar.Tests.Rpc
         }
 
         [Fact]
-        public void CanTransferObjects()
+        public void CanTransferAnonymousObjects()
         {
             var blob = new { Foo = "Bar" };
             dynamic returnBlob = _fixture.Client.EchoObject(blob);
