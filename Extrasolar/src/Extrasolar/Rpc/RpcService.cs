@@ -155,7 +155,8 @@ namespace Extrasolar.Rpc
             {
                 if (type == typeof(object))
                 {
-                    result = ((JToken)obj).ToObject<dynamic>();
+                    // Reserialize to anonymous object
+                    result = (object)obj;
                 }
                 else
                 {

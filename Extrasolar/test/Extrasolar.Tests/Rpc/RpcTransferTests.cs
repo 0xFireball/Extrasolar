@@ -63,7 +63,7 @@ namespace Extrasolar.Tests.Rpc
         {
             var blob = new { Foo = "Bar" };
             dynamic returnBlob = _fixture.Client.EchoObject(blob);
-            Assert.Equal(returnBlob.Foo, blob.Foo);
+            Assert.Equal((string)returnBlob.Foo, blob.Foo);
         }
     }
 }
