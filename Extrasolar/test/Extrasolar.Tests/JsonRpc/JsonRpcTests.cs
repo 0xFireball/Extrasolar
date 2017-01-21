@@ -30,6 +30,7 @@ namespace Extrasolar.Tests.JsonRpc
             }
         }
 
+        [Fact]
         public async Task CanCommunicate()
         {
             Barrier responseReceived = new Barrier(2);
