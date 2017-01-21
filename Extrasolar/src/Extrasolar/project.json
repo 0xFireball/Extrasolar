@@ -5,7 +5,7 @@
 
   "dependencies": {
     "NETStandard.Library": "1.6.0",
-    "Newtonsoft.Json": "9.0.2-beta1",
+    "Newtonsoft.Json": "9.0.1",
     "System.Reflection.Emit": "4.3.0",
     "System.Reflection.TypeExtensions": "4.3.0"
   },
