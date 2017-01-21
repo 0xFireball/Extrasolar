@@ -29,35 +29,24 @@ namespace Extrasolar.Rpc
             // Process arguments
             var rawArgs = request.Parameters;
             var callArgs = new List<object>();
-            if (rawArgs is JArray)
+            var rawParams = ((JValue)rawArgs).Value;
+            if (rawParams is string)
             {
-                callArgs.AddRange((rawArgs as JArray).Children().Select(x => x.ToObject<object>()));
-            }
-            else if (rawArgs is JValue)
-            {
-                var rawParams = (rawArgs as JValue).Value;
-                if (rawParams is string)
+                var paramsData = JsonConvert.DeserializeObject<object>((string)rawParams);
+                if (paramsData is JArray)
                 {
-                    var paramsData = JsonConvert.DeserializeObject<object>((string)rawParams);
-                    if (paramsData is JArray)
+                    // TODO: Properly deserialize values
+                    //var paramsArray = (paramsData as JArray).Children().Select(x => x.ToObject<object>());
+                    var paramsArray = JsonConvert.DeserializeObject<object[]>((string)rawParams);
+                    foreach (var parameter in paramsArray)
                     {
-                        // TODO: Properly deserialize values
-                        //var paramsArray = (paramsData as JArray).Children().Select(x => x.ToObject<object>());
-                        var paramsArray = JsonConvert.DeserializeObject<object[]>((string)rawParams);
-                        foreach (var parameter in paramsArray)
-                        {
-                            callArgs.Add(parameter);
-                        }
-                    }
-                    else
-                    {
-                        callArgs.Add(paramsData);
+                        callArgs.Add(parameter);
                     }
                 }
-            }
-            else
-            {
-                callArgs.Add(rawArgs.ToObject<object>());
+                else
+                {
+                    callArgs.Add(paramsData);
+                }
             }
             // TODO: Get proper object args
             var targetMethodCandidates = _cachedMethodInfo.Where(x => x.Name == methodName);
