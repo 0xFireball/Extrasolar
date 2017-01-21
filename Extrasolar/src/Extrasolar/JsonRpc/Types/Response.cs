@@ -7,7 +7,7 @@ namespace Extrasolar.JsonRpc.Types
     public abstract class Response
     {
         [JsonProperty("jsonrpc", Required = Required.Always)]
-        public string Version { get; set; }
+        public string Version => Request.JsonRpc2Version;
 
         /// <summary>Unique request identifier.</summary>
         [JsonProperty("id", Required = Required.Always)]

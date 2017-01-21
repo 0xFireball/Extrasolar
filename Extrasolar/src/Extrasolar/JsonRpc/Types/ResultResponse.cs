@@ -16,7 +16,6 @@ namespace Extrasolar.JsonRpc.Types
 
         public ResultResponse(string id, JToken result = null)
         {
-            Version = Request.JsonRpc2Version;
             Id = id;
             Result = result;
         }

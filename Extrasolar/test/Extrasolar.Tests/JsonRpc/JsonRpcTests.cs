@@ -97,5 +97,29 @@ namespace Extrasolar.Tests.JsonRpc
             });
             responseReceived.SignalAndWait();
         }
+
+        [Fact]
+        public async Task ServerSendsValidErrors()
+        {
+            Barrier responseReceived = new Barrier(2);
+            string pong = "pong";
+            _fixture.Server.RequestPipeline.AddItemToEnd((req) =>
+            {
+                return new ErrorResponse(req, new Error(Error.JsonRpcErrorCode.ServerError, pong, null));
+            });
+            _fixture.Client.ResponsePipeline.AddItemToEnd((res) =>
+            {
+                // Server should send response with server error
+                Assert.Equal(res.Error.GetErrorCode(), Error.JsonRpcErrorCode.ServerError);
+                Assert.Null(res.Result);
+                responseReceived.SignalAndWait();
+                return true;
+            });
+            await Task.Factory.StartNew(async () =>
+            {
+                await _fixture.Client.SendRequest(new Request("ping", null, null));
+            });
+            responseReceived.SignalAndWait();
+        }
     }
 }
