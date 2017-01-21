@@ -7,6 +7,7 @@ Supports .NET Standard 1.6, so will run on any modern
 
 
 [![Build Status](https://travis-ci.org/0xFireball/Extrasolar.svg?branch=master)](https://travis-ci.org/0xFireball/Extrasolar)
+[![NuGet](https://img.shields.io/nuget/v/Extrasolar.svg)](https://www.nuget.org/packages/Extrasolar/)
 
 Extrasolar abstracts all the underlying details, and lets you
 design your application as if the remote calls you make were local
