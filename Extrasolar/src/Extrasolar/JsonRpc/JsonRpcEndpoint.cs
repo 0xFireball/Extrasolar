@@ -92,9 +92,15 @@ namespace Extrasolar.JsonRpc
                         }
                     }
                 }
+                catch (IOException)
+                {
+                    // Socket closing
+                    break;
+                }
                 catch (ObjectDisposedException)
                 {
                     // Connection closed, most likely while listening
+                    break;
                 }
             }
         }
