@@ -14,6 +14,14 @@ protocol.
 
 ## 5. Response object
 
+## 5 Request handling
+
+Changes
+
+- A request that results in a parse error will not receive a response. The
+  protocol is designed to be used over a reliable mode of transport such as TCP,
+  so appropriate validation should be performed before sending the request
+
 ## 5.1 Error object
 
 Changes
