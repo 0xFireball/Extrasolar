@@ -7,7 +7,7 @@ namespace Extrasolar.Tests.Rpc
 {
     public class RpcTransferTests : IClassFixture<TestClientFixture>
     {
-        private TestClientFixture _fixture;
+        private readonly TestClientFixture _fixture;
 
         public RpcTransferTests()
         {

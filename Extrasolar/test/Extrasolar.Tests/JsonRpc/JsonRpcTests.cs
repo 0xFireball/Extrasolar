@@ -11,8 +11,15 @@ using Xunit;
 
 namespace Extrasolar.Tests.JsonRpc
 {
-    public class JsonRpcTests
+    public class JsonRpcTests : IClassFixture<TestEndpointsFixture>
     {
+        private TestEndpointsFixture _fixture;
+
+        public JsonRpcTests(TestEndpointsFixture fixture)
+        {
+            _fixture = fixture;
+        }
+
         [Fact]
         public void IsDisposable()
         {
@@ -23,40 +30,25 @@ namespace Extrasolar.Tests.JsonRpc
             }
         }
 
-        [Fact]
         public async Task CanCommunicate()
         {
-            int testPort = 12983;
-            TcpListener listener = new TcpListener(IPAddress.Loopback, testPort);
-            listener.Start();
-            var clientSock = new TcpClient();
-            var serverSockTask = listener.AcceptTcpClientAsync();
-            await clientSock.ConnectAsync(IPAddress.Loopback, testPort);
-            var serverSock = await serverSockTask;
             Barrier responseReceived = new Barrier(2);
-
-            using (var client = new JsonRpcEndpoint(serverSock.GetStream(), JsonRpcEndpoint.EndpointMode.Client))
+            string pong = "pong";
+            _fixture.Server.RequestPipeline.AddItemToEnd((req) =>
             {
-                using (var server = new JsonRpcEndpoint(clientSock.GetStream(), JsonRpcEndpoint.EndpointMode.Server))
-                {
-                    string pong = "pong";
-                    server.RequestPipeline.AddItemToEnd((req) =>
-                    {
-                        return new ResultResponse(req, pong);
-                    });
-                    client.ResponsePipeline.AddItemToEnd((res) =>
-                    {
-                        Assert.Equal((res.Result as JValue).Value, pong);
-                        responseReceived.SignalAndWait();
-                        return true;
-                    });
-                    await Task.Factory.StartNew(async () =>
-                    {
-                        await client.SendRequest(new Request("ping", null, "0"));
-                    });
-                    responseReceived.SignalAndWait();
-                }
-            }
+                return new ResultResponse(req, pong);
+            });
+            _fixture.Client.ResponsePipeline.AddItemToEnd((res) =>
+            {
+                Assert.Equal((res.Result as JValue).Value, pong);
+                responseReceived.SignalAndWait();
+                return true;
+            });
+            await Task.Factory.StartNew(async () =>
+            {
+                await _fixture.Client.SendRequest(new Request("ping", null, "0"));
+            });
+            responseReceived.SignalAndWait();
         }
     }
 }
