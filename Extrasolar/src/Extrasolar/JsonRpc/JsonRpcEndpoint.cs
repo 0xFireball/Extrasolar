@@ -38,7 +38,8 @@ namespace Extrasolar.JsonRpc
 
             _eventLoopCancellationTokenSource = new CancellationTokenSource();
             _eventLoopCancellationToken = _eventLoopCancellationTokenSource.Token;
-            EventLoopTask = Task.Factory.StartNew(ReceiveDataEventLoop, _eventLoopCancellationToken);
+
+            EventLoopTask = Task.Run(ReceiveDataEventLoop, _eventLoopCancellationToken);
         }
 
         public async Task SendRequest(Request request)
@@ -85,7 +86,7 @@ namespace Extrasolar.JsonRpc
                                 // Spawn new handlers
                                 foreach (var request in requests)
                                 {
-                                    var handlerTask = Task.Factory.StartNew(async () => await HandleReceivedRequest(request));
+                                    var handlerTask = Task.Run(async () => await HandleReceivedRequest(request));
                                 }
                             }
                             else if (Mode == EndpointMode.Client)
@@ -123,7 +124,7 @@ namespace Extrasolar.JsonRpc
                                 foreach (var response in responses)
                                 {
                                     // Spawn new handler
-                                    var handlerTask = Task.Factory.StartNew(() => HandleReceivedResponse(response));
+                                    var handlerTask = Task.Run(() => HandleReceivedResponse(response));
                                 }
                             }
                         }
@@ -205,7 +206,7 @@ namespace Extrasolar.JsonRpc
         /// </summary>
         public Pipelines<Response, bool> ResponsePipeline { get; } = new Pipelines<Response, bool>();
 
-        protected Task<Task> EventLoopTask { get; private set; }
+        protected Task EventLoopTask { get; private set; }
 
         /// <summary>
         /// A notify-only event that fires whenever a request is received
