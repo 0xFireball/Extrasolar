@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Extrasolar.Types
 {
     public class Pipelines<TInput, TResult>
     {
-        protected List<Func<TInput, TResult>> StartHandlers { get; } = new List<Func<TInput, TResult>>();
-        protected List<Func<TInput, TResult>> EndHandlers { get; } = new List<Func<TInput, TResult>>();
+        protected List<Func<TInput, Task<TResult>>> StartHandlers { get; } = new List<Func<TInput, Task<TResult>>>();
+        protected List<Func<TInput, Task<TResult>>> EndHandlers { get; } = new List<Func<TInput, Task<TResult>>>();
 
         /// <summary>
         /// Appends the handler to the end of the start handler list
         /// </summary>
         /// <param name="handler"></param>
-        public void AddItemToStart(Func<TInput, TResult> handler)
+        public void AddItemToStart(Func<TInput, Task<TResult>> handler)
         {
             lock (StartHandlers)
             {
@@ -24,7 +25,7 @@ namespace Extrasolar.Types
         /// Appends the handler to the end of the end handler list
         /// </summary>
         /// <param name="handler"></param>
-        public void AddItemToEnd(Func<TInput, TResult> handler)
+        public void AddItemToEnd(Func<TInput, Task<TResult>> handler)
         {
             lock (EndHandlers)
             {
@@ -32,18 +33,15 @@ namespace Extrasolar.Types
             }
         }
 
-        public IEnumerable<Func<TInput, TResult>> Handlers
+        public IEnumerable<Func<TInput, Task<TResult>>> GetHandlers()
         {
-            get
+            foreach (var startHandler in StartHandlers)
             {
-                foreach (var startHandler in StartHandlers)
-                {
-                    yield return startHandler;
-                }
-                foreach (var endHandler in EndHandlers)
-                {
-                    yield return endHandler;
-                }
+                yield return startHandler;
+            }
+            foreach (var endHandler in EndHandlers)
+            {
+                yield return endHandler;
             }
         }
     }

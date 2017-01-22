@@ -9,7 +9,7 @@ namespace Extrasolar.Rpc.Proxying
 
         public CallProxy(TInterface target, RpcCaller<TInterface> caller)
         {
-            this._remoteCaller = caller;
+            _remoteCaller = caller;
             _proxiedObject = target;
         }
 

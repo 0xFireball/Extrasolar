@@ -2,7 +2,7 @@
 using Extrasolar.JsonRpc;
 using Extrasolar.JsonRpc.Types;
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,18 +30,18 @@ namespace Extrasolar.IO
             }
         }
 
-        private bool HandleRpcResponse(Response response)
+        private Task<bool> HandleRpcResponse(Response response)
         {
             // Store result and signal that response is ready
             ResultCache[response.Id] = response;
             RequestQueue[response.Id].Set();
-            return false;
+            return Task.FromResult(false);
         }
 
-        private Response HandleRpcRequest(Request request)
+        private Task<Response> HandleRpcRequest(Request request)
         {
             // Empty handler
-            return null;
+            return Task.FromResult<Response>(null);
         }
 
         public async Task<Response> Request(Request request)
@@ -51,9 +51,13 @@ namespace Extrasolar.IO
             RequestQueue[request.Id] = resultReady;
             await RpcLayer.SendRequest(request);
             await Task.Run(() => resultReady.WaitOne());
+            // Remove lock from queue
+            AutoResetEvent removedEvent;
+            RequestQueue.TryRemove(request.Id, out removedEvent);
             // Retrieve result
             var result = ResultCache[request.Id];
-            ResultCache.Remove(request.Id);
+            Response dequeuedResponse;
+            ResultCache.TryRemove(request.Id, out dequeuedResponse);
             return result;
         }
 
@@ -62,7 +66,7 @@ namespace Extrasolar.IO
             RpcLayer.Dispose();
         }
 
-        protected Dictionary<string, AutoResetEvent> RequestQueue { get; } = new Dictionary<string, AutoResetEvent>();
-        protected Dictionary<string, Response> ResultCache { get; } = new Dictionary<string, Response>();
+        protected ConcurrentDictionary<string, AutoResetEvent> RequestQueue { get; } = new ConcurrentDictionary<string, AutoResetEvent>();
+        protected ConcurrentDictionary<string, Response> ResultCache { get; } = new ConcurrentDictionary<string, Response>();
     }
 }

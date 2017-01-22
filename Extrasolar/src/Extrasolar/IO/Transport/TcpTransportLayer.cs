@@ -9,7 +9,7 @@ namespace Extrasolar.IO.Transport
 
         public TcpTransportLayer(TcpClient tcpClient)
         {
-            this._tcpClient = tcpClient;
+            _tcpClient = tcpClient;
         }
 
         public Stream GetStream()

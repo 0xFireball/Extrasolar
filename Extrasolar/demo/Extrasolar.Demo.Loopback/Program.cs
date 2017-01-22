@@ -58,12 +58,12 @@ namespace Extrasolar.Demo.Loopback
             _serverSock = client;
             using (var rpcServer = new NetworkRpcEndpoint(new TcpTransportLayer(client), JsonRpcEndpoint.EndpointMode.Server))
             {
-                rpcServer.RpcLayer.RequestPipeline.AddItemToStart((req) =>
+                rpcServer.RpcLayer.RequestPipeline.AddItemToStart(async (req) =>
                 {
                     if (!req.IsNotification)
                     {
                         Console.WriteLine($"Client called method {req.Method}.");
-                        return new ResultResponse(req, "pong");
+                        return await Task.FromResult(new ResultResponse(req, "pong"));
                     }
                     return null;
                 });

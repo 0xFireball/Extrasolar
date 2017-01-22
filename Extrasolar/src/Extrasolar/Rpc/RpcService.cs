@@ -6,12 +6,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Extrasolar.Rpc
 {
     public class RpcService<TInterface> : IDisposable where TInterface : class
     {
-        public NetworkRpcEndpoint RpcClient { get; set; }
+        public NetworkRpcEndpoint RpcClient { get; }
         public TInterface ServiceImplementation { get; private set; }
         private MethodInfo[] _cachedMethodInfo;
 
@@ -21,7 +22,7 @@ namespace Extrasolar.Rpc
             netRpcClient.RpcLayer.RequestPipeline.AddItemToEnd(HandleRequest);
         }
 
-        private Response HandleRequest(Request request)
+        private async Task<Response> HandleRequest(Request request)
         {
             try
             {
@@ -109,7 +110,7 @@ namespace Extrasolar.Rpc
                         if (targetMethodCandidates.Count() > 1)
                         {
                             // Could not resolve method definitively
-                            return new ErrorResponse(request, new Error(Error.JsonRpcErrorCode.MethodNotFound, "Could not resolve method definitively", methodName));
+                            return new ErrorResponse(request, new Error(JsonRpcErrorCode.MethodNotFound, "Could not resolve method definitively", methodName));
                         }
                     }
                 }
@@ -130,24 +131,24 @@ namespace Extrasolar.Rpc
                 {
                     var result = selectedMethod.Invoke(ServiceImplementation, callArgs.ToArray());
                     var resultJObject = JToken.FromObject(result);
-                    return new ResultResponse(request, resultJObject);
+                    return await Task.FromResult(new ResultResponse(request, resultJObject));
                 }
                 catch (Exception ex)
                 {
-                    return new ErrorResponse(request, new Error(Error.JsonRpcErrorCode.InternalError, ex.Message, JToken.FromObject(ex)));
+                    return new ErrorResponse(request, new Error(JsonRpcErrorCode.InternalError, ex.Message, JToken.FromObject(ex)));
                 }
             }
             catch (InvalidCastException)
             {
-                return new ErrorResponse(request, new Error(Error.JsonRpcErrorCode.InvalidParams, "Could not call method with specified parameters", request.Method));
+                return new ErrorResponse(request, new Error(JsonRpcErrorCode.InvalidParams, "Could not call method with specified parameters", request.Method));
             }
             catch (NotImplementedException)
             {
-                return new ErrorResponse(request, new Error(Error.JsonRpcErrorCode.MethodNotFound, "Could not find a matching method", request.Method));
+                return new ErrorResponse(request, new Error(JsonRpcErrorCode.MethodNotFound, "Could not find a matching method", request.Method));
             }
             catch (Exception ex)
             {
-                return new ErrorResponse(request, new Error(Error.JsonRpcErrorCode.InternalError, ex.Message, JToken.FromObject(ex)));
+                return new ErrorResponse(request, new Error(JsonRpcErrorCode.InternalError, ex.Message, JToken.FromObject(ex)));
             }
         }
 
