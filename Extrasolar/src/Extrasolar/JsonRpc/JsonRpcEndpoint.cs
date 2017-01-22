@@ -51,10 +51,10 @@ namespace Extrasolar.JsonRpc
 
         public async Task SendRequest(IEnumerable<Request> requests)
         {
-            foreach (var request in requests)
-            {
-                await Task.Factory.StartNew(async () => await SendRequest(request));
-            }
+            await _transportLock.WaitAsync();
+            await DataWriter.WriteLineAsync(JsonConvert.SerializeObject(requests));
+            await DataWriter.FlushAsync();
+            _transportLock.Release();
         }
 
         public async Task ReceiveDataEventLoop()
