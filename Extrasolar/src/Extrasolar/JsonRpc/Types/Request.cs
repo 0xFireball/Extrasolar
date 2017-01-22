@@ -3,6 +3,9 @@ using Newtonsoft.Json.Linq;
 
 namespace Extrasolar.JsonRpc.Types
 {
+    /// <summary>
+    /// Represents a request that is sent to a server
+    /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
     public class Request
     {

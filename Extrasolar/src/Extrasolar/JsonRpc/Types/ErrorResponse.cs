@@ -3,6 +3,9 @@ using Newtonsoft.Json.Linq;
 
 namespace Extrasolar.JsonRpc.Types
 {
+    /// <summary>
+    /// Represents a response that contains an error from the server
+    /// </summary>
     public class ErrorResponse : Response
     {
         [JsonConstructor]

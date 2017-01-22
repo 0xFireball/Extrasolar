@@ -3,6 +3,10 @@ using Newtonsoft.Json.Linq;
 
 namespace Extrasolar.JsonRpc.Types
 {
+    /// <summary>
+    /// Represents a successful response that has a result returned
+    /// by the server.
+    /// </summary>
     public class ResultResponse : Response
     {
         [JsonConstructor]
