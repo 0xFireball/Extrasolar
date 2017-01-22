@@ -37,4 +37,4 @@ Changes
 - Batch requests can be sent and are handled by the server concurrently (requests are processed from a worker thread pool,
   so multiple requests will be processed parallelly). However, unlike JSON-RPC, responses will be sent individually rather
   than in a batch; the rationale for this is that the client will match the IDs of the responses, and so that the server
-  can return each response as soon as it is processed rather than waiting for all of the requests to be processed.
+  can return each response as soon as the corresponding request is processed rather than waiting for all of the requests to be processed.
