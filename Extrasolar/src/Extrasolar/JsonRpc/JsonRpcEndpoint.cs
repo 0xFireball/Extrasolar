@@ -61,7 +61,7 @@ namespace Extrasolar.JsonRpc
                     {
                         try
                         {
-                            var dataObject = JObject.Parse(dataJson);
+                            var dataObject = JToken.Parse(dataJson);
                             // Ignore requests if they do not match the role
                             bool isRequest = dataObject["method"] != null;
                             if (Mode == EndpointMode.Server && isRequest)
