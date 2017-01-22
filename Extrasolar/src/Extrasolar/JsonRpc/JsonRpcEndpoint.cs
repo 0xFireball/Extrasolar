@@ -66,9 +66,20 @@ namespace Extrasolar.JsonRpc
                             bool isRequest = dataObject["method"] != null;
                             if (Mode == EndpointMode.Server && isRequest)
                             {
-                                var request = JsonConvert.DeserializeObject<Request>(dataJson);
+                                var requestJObj = JToken.Parse(dataJson);
                                 // Spawn new handler
-                                var handlerTask = Task.Factory.StartNew(async () => await HandleReceivedRequest(request));
+                                if (requestJObj is JArray) // Support request array
+                                {
+                                    var requestArray = requestJObj.ToObject<Request[]>();
+                                    foreach (var request in requestArray)
+                                    {
+                                        var handlerTask = Task.Factory.StartNew(async () => await HandleReceivedRequest(request));
+                                    }
+                                }
+                                else if (requestJObj is JObject)
+                                {
+                                    var handlerTask = Task.Factory.StartNew(async () => await HandleReceivedRequest(requestJObj.ToObject<Request>()));
+                                }
                             }
                             else if (Mode == EndpointMode.Client && !isRequest)
                             {
