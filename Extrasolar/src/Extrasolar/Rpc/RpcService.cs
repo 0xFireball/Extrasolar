@@ -10,6 +10,12 @@ using System.Threading.Tasks;
 
 namespace Extrasolar.Rpc
 {
+    /// <summary>
+    /// Represents a service that automatically implements an RPC request handler.
+    /// An instance implementing the RPC interface is used to automatically
+    /// handle RPC requests
+    /// </summary>
+    /// <typeparam name="TInterface">The interface for the service to implement</typeparam>
     public class RpcService<TInterface> : IDisposable where TInterface : class
     {
         public NetworkRpcEndpoint RpcClient { get; }

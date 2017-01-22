@@ -7,6 +7,11 @@ using System.Threading.Tasks;
 
 namespace Extrasolar.Rpc
 {
+    /// <summary>
+    /// Represents a client that can call code over RPC defined by
+    /// a specified interface.
+    /// </summary>
+    /// <typeparam name="TInterface">The interface that describes the remote code</typeparam>
     public class RpcCaller<TInterface> : IDisposable where TInterface : class
     {
         public NetworkRpcEndpoint RpcClient { get; }

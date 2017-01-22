@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 
 namespace Extrasolar.JsonRpc
 {
+    /// <summary>
+    /// Represents an endpoint (client or server) of the Extrasolar RPC protocol
+    /// </summary>
     public class JsonRpcEndpoint : IDisposable
     {
         [Flags]
