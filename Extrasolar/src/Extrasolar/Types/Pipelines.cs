@@ -33,18 +33,15 @@ namespace Extrasolar.Types
             }
         }
 
-        public IEnumerable<Func<TInput, Task<TResult>>> Handlers
+        public IEnumerable<Func<TInput, Task<TResult>>> GetHandlers()
         {
-            get
+            foreach (var startHandler in StartHandlers)
             {
-                foreach (var startHandler in StartHandlers)
-                {
-                    yield return startHandler;
-                }
-                foreach (var endHandler in EndHandlers)
-                {
-                    yield return endHandler;
-                }
+                yield return startHandler;
+            }
+            foreach (var endHandler in EndHandlers)
+            {
+                yield return endHandler;
             }
         }
     }
