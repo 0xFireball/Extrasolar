@@ -71,9 +71,7 @@ namespace Extrasolar.JsonRpc
                         try
                         {
                             var dataObject = JToken.Parse(dataJson);
-                            // Ignore requests if they do not match the role
-                            bool isRequest = dataObject["method"] != null;
-                            if (Mode == EndpointMode.Server && isRequest)
+                            if (Mode == EndpointMode.Server)
                             {
                                 var requests = new List<Request>();
                                 if (dataObject is JArray)
@@ -90,7 +88,7 @@ namespace Extrasolar.JsonRpc
                                     var handlerTask = Task.Factory.StartNew(async () => await HandleReceivedRequest(request));
                                 }
                             }
-                            else if (Mode == EndpointMode.Client && !isRequest)
+                            else if (Mode == EndpointMode.Client)
                             {
                                 var responses = new List<Response>();
                                 if (dataObject is JArray)
