@@ -146,12 +146,12 @@ namespace Extrasolar.JsonRpc
             }
         }
 
-        private void HandleReceivedResponse(Response response)
+        private async Task HandleReceivedResponse(Response response)
         {
             ResponseReceived?.Invoke(this, response);
             foreach (var handler in ResponsePipeline.Handlers)
             {
-                var result = handler.Invoke(response);
+                var result = await handler.Invoke(response);
                 if (result)
                 {
                     break;
@@ -165,7 +165,7 @@ namespace Extrasolar.JsonRpc
             Response response = null;
             foreach (var handler in RequestPipeline.Handlers)
             {
-                var resp = handler.Invoke(request);
+                var resp = await handler.Invoke(request);
                 if (resp != null)
                 {
                     response = resp;

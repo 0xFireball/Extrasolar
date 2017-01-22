@@ -30,18 +30,18 @@ namespace Extrasolar.IO
             }
         }
 
-        private bool HandleRpcResponse(Response response)
+        private Task<bool> HandleRpcResponse(Response response)
         {
             // Store result and signal that response is ready
             ResultCache[response.Id] = response;
             RequestQueue[response.Id].Set();
-            return false;
+            return Task.FromResult(false);
         }
 
-        private Response HandleRpcRequest(Request request)
+        private Task<Response> HandleRpcRequest(Request request)
         {
             // Empty handler
-            return null;
+            return Task.FromResult<Response>(null);
         }
 
         public async Task<Response> Request(Request request)

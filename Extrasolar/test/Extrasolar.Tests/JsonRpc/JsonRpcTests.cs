@@ -45,15 +45,15 @@ namespace Extrasolar.Tests.JsonRpc
         {
             Barrier responseReceived = new Barrier(2);
             string pong = "pong";
-            Server.RequestPipeline.AddItemToEnd((req) =>
+            Server.RequestPipeline.AddItemToEnd(async (req) =>
             {
-                return new ResultResponse(req, pong);
+                return await Task.FromResult(new ResultResponse(req, pong));
             });
             Client.ResponsePipeline.AddItemToEnd((res) =>
             {
                 Assert.Equal((res.Result as JValue).Value, pong);
                 responseReceived.SignalAndWait();
-                return true;
+                return Task.FromResult(true);
             });
             await Task.Factory.StartNew(async () =>
             {
@@ -67,15 +67,15 @@ namespace Extrasolar.Tests.JsonRpc
         {
             Barrier responseReceived = new Barrier(2);
             string pong = "pong";
-            Server.RequestPipeline.AddItemToEnd((req) =>
+            Server.RequestPipeline.AddItemToEnd(async (req) =>
             {
-                return new ResultResponse(req, pong);
+                return await Task.FromResult(new ResultResponse(req, pong));
             });
             Client.ResponsePipeline.AddItemToEnd((res) =>
             {
                 Assert.NotNull(res.Id);
                 responseReceived.SignalAndWait();
-                return true;
+                return Task.FromResult(true);
             });
             await Task.Factory.StartNew(async () =>
             {
@@ -89,14 +89,14 @@ namespace Extrasolar.Tests.JsonRpc
         {
             Barrier responseReceived = new Barrier(2);
             string pong = "pong";
-            Server.RequestPipeline.AddItemToEnd((req) =>
+            Server.RequestPipeline.AddItemToEnd(async (req) =>
             {
                 if (req.Id == null)
                 {
                     responseReceived.SignalAndWait();
                     return null;
                 }
-                return new ResultResponse(req, pong);
+                return await Task.FromResult(new ResultResponse(req, pong));
             });
             Client.ResponsePipeline.AddItemToEnd((res) =>
             {
@@ -115,9 +115,9 @@ namespace Extrasolar.Tests.JsonRpc
         {
             Barrier responseReceived = new Barrier(2);
             string pong = "pong";
-            Server.RequestPipeline.AddItemToEnd((req) =>
+            Server.RequestPipeline.AddItemToEnd(async (req) =>
             {
-                return new ErrorResponse(req, new Error(Error.JsonRpcErrorCode.ServerError, pong, null));
+                return await Task.FromResult(new ErrorResponse(req, new Error(Error.JsonRpcErrorCode.ServerError, pong, null)));
             });
             Client.ResponsePipeline.AddItemToEnd((res) =>
             {
@@ -125,7 +125,7 @@ namespace Extrasolar.Tests.JsonRpc
                 Assert.Equal(res.Error.GetErrorCode(), Error.JsonRpcErrorCode.ServerError);
                 Assert.Null(res.Result);
                 responseReceived.SignalAndWait();
-                return true;
+                return Task.FromResult(true);
             });
             await Task.Factory.StartNew(async () =>
             {
@@ -140,15 +140,15 @@ namespace Extrasolar.Tests.JsonRpc
             // Barrier: 1 for sender, 4 receivers
             Barrier responseReceived = new Barrier(5);
             string pong = "pong";
-            Server.RequestPipeline.AddItemToEnd((req) =>
+            Server.RequestPipeline.AddItemToEnd(async (req) =>
             {
-                return new ResultResponse(req, pong);
+                return await Task.FromResult(new ResultResponse(req, pong));
             });
             Client.ResponsePipeline.AddItemToEnd((res) =>
             {
                 Assert.NotNull(res.Id);
                 responseReceived.SignalAndWait();
-                return true;
+                return Task.FromResult(true);
             });
             await Task.Factory.StartNew(async () =>
             {

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Extrasolar.Rpc
 {
@@ -21,7 +22,7 @@ namespace Extrasolar.Rpc
             netRpcClient.RpcLayer.RequestPipeline.AddItemToEnd(HandleRequest);
         }
 
-        private Response HandleRequest(Request request)
+        private async Task<Response> HandleRequest(Request request)
         {
             try
             {
@@ -130,7 +131,7 @@ namespace Extrasolar.Rpc
                 {
                     var result = selectedMethod.Invoke(ServiceImplementation, callArgs.ToArray());
                     var resultJObject = JToken.FromObject(result);
-                    return new ResultResponse(request, resultJObject);
+                    return await Task.FromResult(new ResultResponse(request, resultJObject));
                 }
                 catch (Exception ex)
                 {
