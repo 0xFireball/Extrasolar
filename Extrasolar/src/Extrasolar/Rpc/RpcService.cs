@@ -110,7 +110,7 @@ namespace Extrasolar.Rpc
                         if (targetMethodCandidates.Count() > 1)
                         {
                             // Could not resolve method definitively
-                            return new ErrorResponse(request, new Error(Error.JsonRpcErrorCode.MethodNotFound, "Could not resolve method definitively", methodName));
+                            return new ErrorResponse(request, new Error(JsonRpcErrorCode.MethodNotFound, "Could not resolve method definitively", methodName));
                         }
                     }
                 }
@@ -135,20 +135,20 @@ namespace Extrasolar.Rpc
                 }
                 catch (Exception ex)
                 {
-                    return new ErrorResponse(request, new Error(Error.JsonRpcErrorCode.InternalError, ex.Message, JToken.FromObject(ex)));
+                    return new ErrorResponse(request, new Error(JsonRpcErrorCode.InternalError, ex.Message, JToken.FromObject(ex)));
                 }
             }
             catch (InvalidCastException)
             {
-                return new ErrorResponse(request, new Error(Error.JsonRpcErrorCode.InvalidParams, "Could not call method with specified parameters", request.Method));
+                return new ErrorResponse(request, new Error(JsonRpcErrorCode.InvalidParams, "Could not call method with specified parameters", request.Method));
             }
             catch (NotImplementedException)
             {
-                return new ErrorResponse(request, new Error(Error.JsonRpcErrorCode.MethodNotFound, "Could not find a matching method", request.Method));
+                return new ErrorResponse(request, new Error(JsonRpcErrorCode.MethodNotFound, "Could not find a matching method", request.Method));
             }
             catch (Exception ex)
             {
-                return new ErrorResponse(request, new Error(Error.JsonRpcErrorCode.InternalError, ex.Message, JToken.FromObject(ex)));
+                return new ErrorResponse(request, new Error(JsonRpcErrorCode.InternalError, ex.Message, JToken.FromObject(ex)));
             }
         }
 

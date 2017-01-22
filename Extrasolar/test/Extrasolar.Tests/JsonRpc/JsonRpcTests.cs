@@ -117,12 +117,12 @@ namespace Extrasolar.Tests.JsonRpc
             string pong = "pong";
             Server.RequestPipeline.AddItemToEnd(async (req) =>
             {
-                return await Task.FromResult(new ErrorResponse(req, new Error(Error.JsonRpcErrorCode.ServerError, pong, null)));
+                return await Task.FromResult(new ErrorResponse(req, new Error(JsonRpcErrorCode.ServerError, pong, null)));
             });
             Client.ResponsePipeline.AddItemToEnd((res) =>
             {
                 // Server should send response with server error
-                Assert.Equal(res.Error.GetErrorCode(), Error.JsonRpcErrorCode.ServerError);
+                Assert.Equal(res.Error.GetErrorCode(), JsonRpcErrorCode.ServerError);
                 Assert.Null(res.Result);
                 responseReceived.SignalAndWait();
                 return Task.FromResult(true);
