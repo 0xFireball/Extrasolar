@@ -3,6 +3,7 @@ using Extrasolar.Types;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -66,35 +67,58 @@ namespace Extrasolar.JsonRpc
                             bool isRequest = dataObject["method"] != null;
                             if (Mode == EndpointMode.Server && isRequest)
                             {
-                                var requestJObj = JToken.Parse(dataJson);
-                                // Spawn new handler
-                                if (requestJObj is JArray) // Support request array
+                                var requests = new List<Request>();
+                                if (dataObject is JArray)
                                 {
-                                    var requestArray = requestJObj.ToObject<Request[]>();
-                                    foreach (var request in requestArray)
-                                    {
-                                        var handlerTask = Task.Factory.StartNew(async () => await HandleReceivedRequest(request));
-                                    }
+                                    requests.AddRange(dataObject.ToObject<Request[]>());
                                 }
-                                else if (requestJObj is JObject)
+                                else if (dataObject is JObject)
                                 {
-                                    var handlerTask = Task.Factory.StartNew(async () => await HandleReceivedRequest(requestJObj.ToObject<Request>()));
+                                    requests.Add(dataObject.ToObject<Request>());
+                                }
+                                // Spawn new handlers
+                                foreach (var request in requests)
+                                {
+                                    var handlerTask = Task.Factory.StartNew(async () => await HandleReceivedRequest(request));
                                 }
                             }
                             else if (Mode == EndpointMode.Client && !isRequest)
                             {
-                                Response response;
-                                var successful = dataObject["error"] == null;
-                                if (successful)
+                                var responses = new List<Response>();
+                                if (dataObject is JArray)
                                 {
-                                    response = dataObject.ToObject<ResultResponse>();
+                                    var responseArray = (JArray)dataObject;
+                                    foreach (var responseEl in responseArray)
+                                    {
+                                        var successful = responseEl["error"] == null;
+                                        if (successful)
+                                        {
+                                            responses.Add(responseEl.ToObject<ResultResponse>());
+                                        }
+                                        else
+                                        {
+                                            responses.Add(responseEl.ToObject<ErrorResponse>());
+                                        }
+                                    }
                                 }
-                                else
+                                else if (dataObject is JObject)
                                 {
-                                    response = dataObject.ToObject<ErrorResponse>();
+                                    var successful = dataObject["error"] == null;
+                                    if (successful)
+                                    {
+                                        responses.Add(dataObject.ToObject<ResultResponse>());
+                                    }
+                                    else
+                                    {
+                                        responses.Add(dataObject.ToObject<ErrorResponse>());
+                                    }
                                 }
-                                // Spawn new handler
-                                var handlerTask = Task.Factory.StartNew(() => HandleReceivedResponse(response));
+
+                                foreach (var response in responses)
+                                {
+                                    // Spawn new handler
+                                    var handlerTask = Task.Factory.StartNew(() => HandleReceivedResponse(response));
+                                }
                             }
                         }
                         catch (JsonSerializationException)
