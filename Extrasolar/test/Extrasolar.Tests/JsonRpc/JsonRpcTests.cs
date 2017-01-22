@@ -133,5 +133,34 @@ namespace Extrasolar.Tests.JsonRpc
             });
             responseReceived.SignalAndWait();
         }
+
+        [Fact]
+        public async Task ServerHandlesRequestArray()
+        {
+            // Barrier: 1 for sender, 4 receivers
+            Barrier responseReceived = new Barrier(5);
+            string pong = "pong";
+            Server.RequestPipeline.AddItemToEnd((req) =>
+            {
+                return new ResultResponse(req, pong);
+            });
+            Client.ResponsePipeline.AddItemToEnd((res) =>
+            {
+                Assert.NotNull(res.Id);
+                responseReceived.SignalAndWait();
+                return true;
+            });
+            await Task.Factory.StartNew(async () =>
+            {
+                await Client.SendRequest(new Request[]
+                {
+                    new Request("ping", null, "0"),
+                    new Request("ping", null, "1"),
+                    new Request("ping", null, "2"),
+                    new Request("ping", null, "3")
+                });
+            });
+            responseReceived.SignalAndWait();
+        }
     }
 }

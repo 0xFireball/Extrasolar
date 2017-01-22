@@ -49,6 +49,14 @@ namespace Extrasolar.JsonRpc
             _transportLock.Release();
         }
 
+        public async Task SendRequest(IEnumerable<Request> requests)
+        {
+            foreach (var request in requests)
+            {
+                await Task.Factory.StartNew(async () => await SendRequest(request));
+            }
+        }
+
         public async Task ReceiveDataEventLoop()
         {
             while (Listening)
