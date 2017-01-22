@@ -11,7 +11,7 @@ namespace Extrasolar.Rpc
 {
     public class RpcService<TInterface> : IDisposable where TInterface : class
     {
-        public NetworkRpcEndpoint RpcClient { get; set; }
+        public NetworkRpcEndpoint RpcClient { get; }
         public TInterface ServiceImplementation { get; private set; }
         private MethodInfo[] _cachedMethodInfo;
 

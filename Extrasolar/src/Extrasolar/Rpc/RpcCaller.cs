@@ -9,7 +9,7 @@ namespace Extrasolar.Rpc
 {
     public class RpcCaller<TInterface> : IDisposable where TInterface : class
     {
-        public NetworkRpcEndpoint RpcClient { get; set; }
+        public NetworkRpcEndpoint RpcClient { get; }
 
         private int _requestCount;
 
