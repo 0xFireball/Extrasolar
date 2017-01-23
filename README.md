@@ -66,6 +66,7 @@ registering a client and server as shown before.
 Once you've done that, you can design your application as if the server
 implementation was part of your application, thanks to the awesome dynamic proxy!
 
+
 #### How it works
 
 When you call `CreateClient`, Extrasolar uses `System.Reflection.Emit` to generate
